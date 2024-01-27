@@ -43,10 +43,10 @@ export function decryptONSValue(value: string, unhashedName: string) {
   return decryptWithKey(value, generateKey(unhashedName))
 }
 
-export async function dehash(hash: string): Promise<string | null> {
-  const dehashed = await ons.get<{ hash: string, string: string }>('SELECT * FROM hashes WHERE hash = (?)', hash)
-  if (dehashed) {
-    return dehashed.string
+export async function unhash(hash: string): Promise<string | null> {
+  const unhashed = await ons.get<{ hash: string, string: string }>('SELECT * FROM hashes WHERE hash = (?)', hash)
+  if (unhashed) {
+    return unhashed.string
   } else {
     return null
   }

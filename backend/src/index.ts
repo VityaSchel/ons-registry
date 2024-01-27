@@ -1,10 +1,11 @@
 import Fastify from 'fastify'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
-import { decryptONSValue, dehash, hash } from './encrytion.js'
+import { decryptONSValue, unhash, hash } from './encrytion.js'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { OnsMapping } from './schema.js'
+import { validOnsName } from 'src/ons-name-regex.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -18,12 +19,20 @@ const ons = await open({
 })
 
 fastify.get<{ Params: { name: string } }>('/session/:name', async (request, reply) => {
-  const unhashedName = request.params.name
+  const unhashedName = request.params.name.toLowerCase()
+  if(!await validOnsName(unhashedName)) {
+    reply.status(400).send({ ok: false, error: 'INVALID_NAME' })
+    return
+  }
   const hashedName = hash(unhashedName)
   const mappings = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE name_hash = (?) AND type="session"', hashedName)
   if (!mappings.length) {
-    reply.status(404).send({ ok: false, error: 'not-found' })
+    reply.status(404).send({ ok: false, error: 'NOT_FOUND' })
   } else {
+    const unhashRecord = await ons.get<OnsMapping[]>('SELECT * FROM hashes WHERE hash = (?)', hashedName)
+    if (!unhashRecord) {
+      await ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
+    }
     reply.send(
       mappings.map(mapping => ({
         owner: mapping.owner,
@@ -43,7 +52,7 @@ fastify.get<{ Params: { owner: string } }>('/owner/:owner', async (request, repl
   const mappings = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE owner = (?)', owner)
   reply.send(
     await Promise.all(mappings.map(async mapping => {
-      const unhashedName = await dehash(mapping.name_hash)
+      const unhashedName = await unhash(mapping.name_hash)
       return {
         name: unhashedName,
         ...(unhashedName === null && { nameHash: mapping.name_hash }),

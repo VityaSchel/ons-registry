@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { ons } from '@/index.js'
+import { ons } from './index.js'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 
