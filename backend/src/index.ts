@@ -41,6 +41,7 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
     }
     reply.send(
       mappings.map(mapping => ({
+        name: unhashedName,
         owner: mapping.owner,
         backupOwner: mapping.backup_owner,
         sessionID: decryptONSValue(mapping.value, unhashedName),
@@ -80,20 +81,32 @@ fastify.get('/list', async (request, reply) => {
       .int()
       .positive()
       .optional(),
+    sortBy: z.enum([
+      'updatedAtBlock',
+    ]).optional(),
+    sortDir: z.enum([
+      'ASC',
+      'DESC',
+    ]).optional(),
   }).safeParse(request.query)
   if(!query.success) {
     reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
     return
   }
+  const sortBy = {
+    updatedAtBlock: 'mappings.updated_at_block',
+  }[query.data.sortBy ?? 'updatedAtBlock']
+  const sortDir = query.data.sortDir ?? 'DESC'
   const mappings = await ons.all<OnsMapping[]>(`
     SELECT mappings.*, hashes.string AS name
     FROM mappings
     LEFT JOIN hashes ON mappings.name_hash = hashes.hash
     ${query.data.query ? 'WHERE hashes.string LIKE :query' : ''}
+    ORDER BY ${sortBy} ${sortDir}
     LIMIT (:limit)
   `, {
     ':limit': query.data.limit ?? 100,
-    ...(query.data.query && { ':query': `%${query.data.query}%` }),
+    ...(query.data.query && { ':query': `%${query.data.query}%` })
   })
   reply.send(
     await Promise.all(mappings.map(mapOnsRecord))
