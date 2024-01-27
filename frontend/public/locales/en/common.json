@@ -18,6 +18,13 @@
       "owner_type_wallet": "Address of OXEN wallet that bought this ONS mapping",
       "owner_type_keypair": "ed25519 keypair of owner"
     },
-    
+    "transaction": {
+      "label": "Transaction ID in OXEN blockchain",
+      "hint": "Click to view transaction in OXEN blockchain explorer"
+    },
+    "updated_at_block": {
+      "label": "Block height",
+      "hint": "This ONS mapping was last updated at this block height"
+    }
   }
 }
