@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 export default function HomePage() {
   return (
     <main
-      className={`flex min-h-screen flex-col items-center justify-between ${inter.className} antialiased font-semibold`}
+      className={`flex min-h-screen flex-col items-center justify-between ${inter.className} antialiased font-semibold pb-12`}
     >
       <HomepageHero />
     </main>

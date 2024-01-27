@@ -3,7 +3,9 @@
   "description": "Open OXEN Name System list, updated automatically from the blockchain. Easily lookup ONS names and get all authors usernames.",
   "search": {
     "placeholder": "Search ONS names...",
-    "no_results": "No results found"
+    "no_results": "No results found",
+    "search_names": "Search names",
+    "search_by_owner": "Search by owner"
   },
   "ons_record": {
     "name_unhashed": {
@@ -17,6 +19,7 @@
       "label": "SessionID"
     },
     "value_encrypted": {
+      "label": "Encrypted SessionID",
       "hint": "We couldn't un-hash this name, thus it's impossible to know whom it belongs to. If you know what it is, type it to search and it will automatically be saved for other users."
     },
     "owner": {

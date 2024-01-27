@@ -22,6 +22,10 @@ import {
 import React from 'react'
 import { Button } from '@/shared/shadcn/ui/button'
 import { Skeleton } from '@/shared/shadcn/ui/skeleton'
+import { GoQuestion } from 'react-icons/go'
+import { LuKeySquare } from 'react-icons/lu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/shadcn/ui/tooltip'
+import OxenLogo from '@/assets/oxen-logo.svg'
 
 export function ONSRecordsTable({ data, loading = false, exactResults }: {
   data: OnsRecord[] | null
@@ -36,23 +40,85 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
       header: t('ons_record.name_unhashed.label'),
       size: 100,
       cell: ({ row }) => (
-        <span className='text-ellipsis overflow-hidden max-w-full block'>{row.getValue('name') as string}</span>
+        <span className='text-ellipsis overflow-hidden max-w-full block'>
+          {row.getValue('name') ?? (
+            <span className='text-neutral-600 flex gap-2 items-center'>
+              {t('ons_record.name_hashed.label')}
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <button>
+                      <GoQuestion />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-muted'>
+                    <p className='max-w-80 text-white'>{t('ons_record.name_hashed.hint')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          )}
+        </span>
       ),
     },
     {
       accessorKey: 'sessionId',
       header: t('ons_record.value.label'),
       cell: ({ row }) => (
-        <span className='text-ellipsis overflow-hidden max-w-full block'>{row.getValue('sessionId') as string}</span>
+        <span className='text-ellipsis overflow-hidden max-w-full block'>
+          {row.getValue('sessionId') ?? (
+            <span className='text-neutral-600 flex gap-2 items-center'>
+              {t('ons_record.value_encrypted.label')}
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <button>
+                      <GoQuestion />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className='bg-muted'>
+                    <p className='max-w-80 text-white'>{t('ons_record.value_encrypted.hint')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          )}
+        </span>
       ),
       size: 200,
     },
     {
       accessorKey: 'owner',
       header: t('ons_record.owner.label'),
-      cell: ({ row }) => (
-        <span className='text-ellipsis overflow-hidden max-w-full block'>{row.getValue('owner') as string}</span>
-      ),
+      cell: ({ row }) => {
+        const owner = row.getValue('owner') as string
+        const isWallet = owner.length !== 160
+        return (
+          <div className='flex gap-2 items-center'>
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button className='w-12'>
+                    {!isWallet ? (
+                      <LuKeySquare color='#2563eb' />
+                    ) : (
+                      <OxenLogo />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className='bg-muted'>
+                  <p className='max-w-80 text-white'>
+                    {isWallet ? t('ons_record.owner.owner_type_wallet') : t('ons_record.owner.owner_type_keypair')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span className='text-ellipsis overflow-hidden max-w-full block'>
+              {owner}
+            </span>
+          </div>
+        )
+      },
       size: 100,
     },
     {
