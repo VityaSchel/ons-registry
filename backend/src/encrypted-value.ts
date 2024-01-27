@@ -23,13 +23,18 @@ const is_lokinet_type = (t: mapping_type): boolean => {
 const OLD_ENCRYPTION_NONCE = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES, 0);
 const isLokinetType = (type) => type === 'lokinet' || type === 'lokinet2';
 const assert = (...args) => true
-const SESSION_DISPLAY_NAME_MAX = 64;
-const ed25519_public_key_length = 32
-const SESSION_PUBLIC_KEY_BINARY_LENGTH = 1 + ed25519_public_key_length
-const LOKINET_ADDRESS_BINARY_LENGTH = ed25519_public_key_length
-const ONS_WALLET_TYPE_PRIMARY = 0x00;
-const ONS_WALLET_TYPE_SUBADDRESS = 0x01;
-const ONS_WALLET_TYPE_INTEGRATED = 0x02;
+const SESSION_DISPLAY_NAME_MAX = 64 as const
+const ed25519_public_key_length = 32 as const
+const SESSION_PUBLIC_KEY_BINARY_LENGTH = 33 as const//1 + ed25519_public_key_length
+const LOKINET_ADDRESS_BINARY_LENGTH = 32 as const//ed25519_public_key_length
+const ONS_WALLET_TYPE_PRIMARY = 0x00 as const
+const ONS_WALLET_TYPE_SUBADDRESS = 0x01 as const
+const ONS_WALLET_TYPE_INTEGRATED = 0x02 as const
+const crypto_aead_xchacha20poly1305_ietf_ABYTES = 16 as const
+const crypto_aead_xchacha20poly1305_ietf_NPUBBYTES = 24 as const
+
+// len != SESSION_PUBLIC_KEY_BINARY_LENGTH + crypto_aead_xchacha20poly1305_ietf_ABYTES + crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
+// len !== 32+1 + 16 + 24 = 73
 
 // Enums
 const ons_sql_type = {
@@ -96,7 +101,7 @@ class MappingValue {
     this.encrypted = encrypted;
   }
 
-  valueNonce(type) {
+  valueNonce(type): [Buffer, Buffer] {
     let head, tail;
     head = this.buffer.slice(0, this.len);
 
@@ -196,7 +201,6 @@ class MappingValue {
     assert([...name].every(c => c.toLowerCase() === c)); // Assuming name is in lowercase
 
     let decLength;
-    let decBuffer;
     const skey = new secretboxSecretKey();
 
     switch (type) {
@@ -224,22 +228,31 @@ class MappingValue {
         return false;
     }
 
-    const expectedLen = decLength + sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES +
-      sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
-    if (this.len !== expectedLen) {
-      console.error(`Encrypted value size is invalid=${this.len}, expected=${expectedLen}`);
-      return false;
-    }
+    // const expectedLen = decLength + sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES +
+    //   sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
+    // if (this.len !== expectedLen) {
+    //   console.error(`Encrypted value size is invalid=${this.len}, expected=${expectedLen}`);
+    //   return false;
+    // }
 
     const [enc, nonce] = this.valueNonce(type);
+    const decBuffer = Buffer.alloc(decLength)
 
     nameToEncryptionKey(name, nameHash, skey);
-    const actualLength = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
-      Buffer.alloc(0), // was null
-      enc,
-      Buffer.alloc(0), // was null
+    console.log([
+      decBuffer,
+      null,
+      enc.toString('hex'),
       null,
       nonce,
+      skey.data.toString('hex')
+    ])
+    const actualLength = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+      decBuffer,
+      null,
+      enc,
+      null,
+      nonce,  
       skey.data
     );
 
@@ -314,6 +327,16 @@ function nameToHash(name) {
     .digest('hex')
 }
 
+const generateKey = (unhashed: string) => {
+  const key = blake2.createHash('blake2b', { digestLength: 32 })
+    .update(Buffer.from(unhashed))
+    .digest()
+  return blake2.createKeyedHash('blake2b', key, { digestLength: 32 })
+    .update(Buffer.from(unhashed))
+    .digest()
+}
+
+
 class secretboxSecretKey {
   data: Buffer
 
@@ -321,19 +344,21 @@ class secretboxSecretKey {
     this.data = Buffer.alloc(sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
   }
 
-  set(hash) {
+  set(hash: string) {
     // assert(this.data.length === sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
     // assert(this.data.length === crypto.hash.size());
-    hash.copy(this.data);
+    // hash.copy(this.data);
+    // this.data.copy(hash)
+    this.data = Buffer.from(hash, 'hex')
     return this;
   }
 }
 
-function nameToEncryptionKey(name, nameHash, out) {
+function nameToEncryptionKey(name, nameHash, out: secretboxSecretKey) {
   assert(out.data.length === sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
-
   // const nameHash_ = nameHash ? nameHash : nameToHash(name);
-  out.set(nameToHash(name/*, nameHash_)*/));
+  // out.set(nameToHash(name/*, nameHash_)*/));
+  out.set(generateKey(name).toString('hex'))
 }
 
 function nameToEncryptionKeyArgon2(name, out) {
@@ -352,7 +377,7 @@ function nameToEncryptionKeyArgon2(name, out) {
 
 const buffer = Buffer.from('71772d0deba03d42d84f5e7fe3e619eab6adf1809a03be32e9a546378647346069180213b360bd19e4931985770ba51c54bfa1d8c53a92357c0c170af90a743dc2b4960eff150ea407', 'utf-8')
 const len = buffer.length
-const encrypted = false
+const encrypted = true
 const mappingValue = new MappingValue(buffer, len, encrypted)
-mappingValue.decrypt('hloth', 'session', nameToBase64Hash('hloth'))
+console.log(mappingValue.decrypt('hloth', 'session', nameToBase64Hash('hloth')))
 console.log(mappingValue.buffer.toString('utf-8'))

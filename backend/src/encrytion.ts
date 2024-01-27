@@ -21,15 +21,15 @@ export async function decryptValue(encryptedValue: string, hashedName: string, d
     const encryptedDummyBlock = cipher.update(dummyBlock);
 
     // Use the encrypted dummy block as the encryption key
-    encryptedDummyBlock.copy(out);
+    // encryptedDummyBlock.copy(out);
   }
 
   const key = await deriveKey(dehashedName)
   const nonce = Buffer.alloc(12)
   const encryptedData = Buffer.from(encryptedValue, 'hex')
-  const decipher = crypto.createDecipheriv('chacha20-poly1305', key, nonce)
-  const decryptedData = Buffer.concat([decipher.update(encryptedData), decipher.final()])
-  return decryptedData.toString('utf8')
+  // const decipher = crypto.createDecipheriv('chacha20-poly1305', key, nonce)
+  // const decryptedData = Buffer.concat([decipher.update(encryptedData), decipher.final()])
+  return //decryptedData.toString('utf8')
 }
 
-console.log(await decryptValue('71772d0deba03d42d84f5e7fe3e619eab6adf1809a03be32e9a546378647346069180213b360bd19e4931985770ba51c54bfa1d8c53a92357c0c170af90a743dc2b4960eff150ea407', 'hloth'))
+// console.log(await decryptValue('71772d0deba03d42d84f5e7fe3e619eab6adf1809a03be32e9a546378647346069180213b360bd19e4931985770ba51c54bfa1d8c53a92357c0c170af90a743dc2b4960eff150ea407', 'hloth'))

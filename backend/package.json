@@ -15,7 +15,9 @@
     "blake2": "^5.0.0",
     "fastify": "^4.25.2",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.57",
