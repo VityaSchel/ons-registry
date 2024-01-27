@@ -20,12 +20,6 @@ dependencies:
   sqlite3:
     specifier: ^5.1.7
     version: 5.1.7
-  tweetnacl:
-    specifier: ^1.0.3
-    version: 1.0.3
-  tweetnacl-util:
-    specifier: ^0.15.1
-    version: 0.15.1
 
 devDependencies:
   '@swc/cli':
@@ -44,7 +38,7 @@ devDependencies:
     specifier: ^2.3.9
     version: 2.3.9
   '@typescript-eslint/eslint-plugin':
-    specifier: ^5.38.0
+    specifier: ^5.62.0
     version: 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.56.0)(typescript@5.3.3)
   '@typescript-eslint/parser':
     specifier: ^5.38.0
@@ -2786,14 +2780,6 @@ packages:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
     dependencies:
       safe-buffer: 5.2.1
-    dev: false
-
-  /tweetnacl-util@0.15.1:
-    resolution: {integrity: sha512-RKJBIj8lySrShN4w6i/BonWp2Z/uxwC3h4y7xsRrpP59ZboCd0GpEVsOnMDYLMmKBpYhb5TgHzZXy7wTfYFBRw==}
-    dev: false
-
-  /tweetnacl@1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
     dev: false
 
   /type-check@0.4.0:

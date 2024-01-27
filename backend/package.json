@@ -5,8 +5,8 @@
   "main": "out/index.js",
   "type": "module",
   "scripts": {
-    "build": "rm -rf ./out/ && swc ./src -d ./out --copy-files && tsc --emitDeclarationOnly",
-    "start": "node out/index.js"
+    "build": "rm -rf ./out/ && swc ./src -d ./out --copy-files",
+    "start": "node out/index.js --loader ./loader.js"
   },
   "author": "Viktor Shchelochkov <hi@hloth.dev> (https://hloth.dev/)",
   "license": "MIT",
@@ -15,9 +15,7 @@
     "blake2": "^5.0.0",
     "fastify": "^4.25.2",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-    "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.57",
@@ -25,7 +23,7 @@
     "@types/blake2": "^4.0.4",
     "@types/node": "^18.17.0",
     "@types/sodium-native": "^2.3.9",
-    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.38.0",
     "eslint": "^8.8.0",
     "sodium-native": "^4.0.6",

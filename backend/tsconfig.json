@@ -20,11 +20,6 @@
     "useUnknownInCatchVariables": false,
     "declaration": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    }
   },
   "include": [
     "src/**/*.ts"
