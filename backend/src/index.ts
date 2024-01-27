@@ -5,12 +5,18 @@ import { decryptONSValue, unhash, hash } from './encrytion.js'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { OnsMapping } from './schema.js'
-import { validOnsName } from './ons-name-regex.js'
+import { onsNameRegex, validOnsName } from './ons-name-regex.js'
+import cors from '@fastify/cors'
+import { z } from 'zod'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
 const fastify = Fastify({
   logger: true
+})
+
+await fastify.register(cors, {
+  origin: ['http://localhost:8777']
 })
 
 const ons = await open({
@@ -56,11 +62,39 @@ fastify.get<{ Params: { owner: string } }>('/owner/:owner', async (request, repl
 })
 
 fastify.get('/list', async (request, reply) => {
+  const query = await z.object({
+    query: z.string()
+      .min(1)
+      .max(64)
+      .regex(new RegExp(onsNameRegex, 'g'))
+      .optional(),
+    maxBlock: z.coerce.number()
+      .int()
+      .positive()
+      .optional(),
+    minBlock: z.coerce.number()
+      .int()
+      .positive()
+      .optional(),
+    limit: z.coerce.number()
+      .int()
+      .positive()
+      .optional(),
+  }).safeParse(request.query)
+  if(!query.success) {
+    reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
+    return
+  }
   const mappings = await ons.all<OnsMapping[]>(`
     SELECT mappings.*, hashes.string AS name
     FROM mappings
-    LEFT JOIN hashes ON mappings.name_hash = hashes.hash;
-  `)
+    LEFT JOIN hashes ON mappings.name_hash = hashes.hash
+    ${query.data.query ? 'WHERE hashes.string LIKE :query' : ''}
+    LIMIT (:limit)
+  `, {
+    ':limit': query.data.limit ?? 100,
+    ...(query.data.query && { ':query': `%${query.data.query}%` }),
+  })
   reply.send(
     await Promise.all(mappings.map(mapOnsRecord))
   )
@@ -72,6 +106,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   return {
     name: unhashedName,
     ...(unhashedName === null && { nameHash: mapping.name_hash }),
+    owner: mapping.owner,
     backupOwner: mapping.backup_owner,
     sessionId: unhashedName ? sessionID : null,
     ...((unhashedName === null || sessionID === null) && { sessionIdEncrypted: mapping.value }),

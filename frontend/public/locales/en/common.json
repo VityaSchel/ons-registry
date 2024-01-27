@@ -13,6 +13,12 @@
       "label": "Hashed name",
       "hint": "We couldn't un-hash this name. It is probably something very unique. If you know what it is, type it to search and it will automatically be saved for other users."
     },
+    "value": {
+      "label": "SessionID"
+    },
+    "value_encrypted": {
+      "hint": "We couldn't un-hash this name, thus it's impossible to know whom it belongs to. If you know what it is, type it to search and it will automatically be saved for other users."
+    },
     "owner": {
       "label": "Owner",
       "owner_type_wallet": "Address of OXEN wallet that bought this ONS mapping",
@@ -25,6 +31,9 @@
     "updated_at_block": {
       "label": "Block height",
       "hint": "This ONS mapping was last updated at this block height"
+    },
+    "updated_at_time": {
+      "label": "Update date"
     }
   }
 }

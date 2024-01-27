@@ -25,6 +25,12 @@
     "updated_at_block": {
       "label": "Высота блока",
       "hint": "Этот маппинг ONS был обновлен в блоке с этой высотой"
+    },
+    "value": {
+      "label": "SessionID"
+    },
+    "updated_at_time": {
+      "label": "Дата обновления"
     }
   }
 }
