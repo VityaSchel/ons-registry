@@ -2,7 +2,7 @@
   "title": "ONS Registry",
   "description": "Open OXEN Name System list, updated automatically from the blockchain. Easily lookup ONS names and get all authors usernames.",
   "search": {
-    "placeholder": "Search ONS names",
+    "placeholder": "Search ONS names...",
     "no_results": "No results found"
   },
   "ons_record": {

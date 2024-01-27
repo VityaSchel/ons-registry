@@ -12,7 +12,9 @@ export function hash(input) {
 
 function decryptWithKey(messageWithNonce: string, keyUint8Array: Buffer) {
   const messageWithNonceAsUint8Array = Buffer.from(messageWithNonce, 'hex')
-  const nonce = messageWithNonceAsUint8Array.subarray(messageWithNonceAsUint8Array.length - sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+  const nonce = messageWithNonceAsUint8Array.subarray(
+    messageWithNonceAsUint8Array.length - sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
+  )
   const message = messageWithNonceAsUint8Array.subarray(
     0,
     messageWithNonceAsUint8Array.length - sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
@@ -40,7 +42,15 @@ export function decryptONSValue(value: string, unhashedName: string) {
       .update(Buffer.from(unhashed))
       .digest()
   }
-  return decryptWithKey(value, generateKey(unhashedName))
+  try {
+    return decryptWithKey(value, generateKey(unhashedName))
+  } catch(e) {
+    if (e.message === 'could not verify data') {
+      return null
+    } else {
+      throw e
+    }
+  }
 }
 
 export async function unhash(hash: string): Promise<string | null> {

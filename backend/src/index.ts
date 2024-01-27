@@ -5,7 +5,7 @@ import { decryptONSValue, unhash, hash } from './encrytion.js'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { OnsMapping } from './schema.js'
-import { validOnsName } from 'src/ons-name-regex.js'
+import { validOnsName } from './ons-name-regex.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -51,20 +51,7 @@ fastify.get<{ Params: { owner: string } }>('/owner/:owner', async (request, repl
   const owner = request.params.owner
   const mappings = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE owner = (?)', owner)
   reply.send(
-    await Promise.all(mappings.map(async mapping => {
-      const unhashedName = await unhash(mapping.name_hash)
-      return {
-        name: unhashedName,
-        ...(unhashedName === null && { nameHash: mapping.name_hash }),
-        backupOwner: mapping.backup_owner,
-        sessionID: unhashedName ? decryptONSValue(mapping.value, unhashedName) : null,
-        ...(unhashedName === null && { sessionIdEncrypted: mapping.value }),
-        transactionId: mapping.transaction_id,
-        updatedAtBlock: mapping.updated_at_block,
-        expiresAtBlock: mapping.expires_at_block,
-        action: mapping.action,
-      }
-    }))
+    await Promise.all(mappings.map(mapOnsRecord))
   )
 })
 
@@ -74,8 +61,26 @@ fastify.get('/list', async (request, reply) => {
     FROM mappings
     LEFT JOIN hashes ON mappings.name_hash = hashes.hash;
   `)
-  reply.send(mappings)
+  reply.send(
+    await Promise.all(mappings.map(mapOnsRecord))
+  )
 })
+
+const mapOnsRecord = async (mapping: OnsMapping) => {
+  const unhashedName = await unhash(mapping.name_hash)
+  const sessionID = unhashedName ? decryptONSValue(mapping.value, unhashedName) : null
+  return {
+    name: unhashedName,
+    ...(unhashedName === null && { nameHash: mapping.name_hash }),
+    backupOwner: mapping.backup_owner,
+    sessionId: unhashedName ? sessionID : null,
+    ...((unhashedName === null || sessionID === null) && { sessionIdEncrypted: mapping.value }),
+    transactionId: mapping.transaction_id,
+    updatedAtBlock: mapping.updated_at_block,
+    expiresAtBlock: mapping.expires_at_block,
+    action: mapping.action,
+  }
+}
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err
