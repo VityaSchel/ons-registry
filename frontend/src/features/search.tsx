@@ -28,11 +28,19 @@ export function Search() {
         setSearchResults(null)
         setExactResults(null)
         if (searchQuery) {
-          const abortSearch = search(searchQuery)
-          const abortExactSearch = exactSearch(searchQuery)
+          const searchResults = search(searchQuery)
+          const exactSearchResults = exactSearch(searchQuery)
+          searchResults.promise
+            .then(setSearchResults)
+          exactSearchResults.promise
+            .then(setExactResults)
+          Promise.all([searchResults.promise, exactSearchResults.promise])
+            .then(() => {
+              setResultsForQuery(searchQuery)
+            })
           return () => {
-            abortSearch()
-            abortExactSearch()
+            searchResults.abort()
+            exactSearchResults.abort()
           }
         }
       }
@@ -55,43 +63,59 @@ export function Search() {
 
   const search = (searchQuery: string) => {
     const abortController = new AbortController()
-    fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
-      ...(searchQuery && { query: searchQuery }),
-      limit: '100'
-    }), { signal: abortController.signal })
-      .then(res => res.json())
-      .then(json => {
-        setSearchResults(json as OnsRecord[])
-        setResultsForQuery(searchQuery)
-      })
-      .catch(err => console.error(err))
 
-    return () => abortController.abort()
+    const promise = new Promise<OnsRecord[] | null>(resolve => {
+      fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+        ...(searchQuery && { query: searchQuery }),
+        limit: '100'
+      }), { signal: abortController.signal })
+        .then(res => res.json())
+        .then(json => {
+          resolve(json as OnsRecord[])
+        })
+        .catch(err => {
+          if (err.name === 'AbortError') return
+          console.error(err)
+        })
+    })
+
+    return {
+      abort: () => abortController.abort(), promise: promise 
+    }
   }
 
   const exactSearch = (searchQuery: string) => {
     const abortController = new AbortController()
-    fetch(
-      process.env.NEXT_PUBLIC_API_URL + '/session/' + searchQuery, 
-      { signal: abortController.signal }
-    )
-      .then(res => res.json())
-      .then(json => {
-        const result = json as OnsRecord[] | { ok: false, error: string }
-        if ('error' in result) {
-          if(result.error === 'not_found') {
-            setExactResults(null)
-            return
-          } else {
-            throw new Error(result.error)
-          }
-        } else {
-          setExactResults(result)
-        }
-      })
-      .catch(err => console.error(err))
 
-    return () => abortController.abort()
+    const promise = new Promise<OnsRecord[] | null>(resolve => {
+      fetch(
+        process.env.NEXT_PUBLIC_API_URL + '/session/' + searchQuery, 
+        { signal: abortController.signal }
+      )
+        .then(res => res.json())
+        .then(json => {
+          const result = json as OnsRecord[] | { ok: false, error: string }
+          if ('error' in result) {
+            if(result.error === 'NOT_FOUND') {
+              resolve(null)
+              return
+            } else {
+              throw new Error(result.error)
+            }
+          } else {
+            resolve(result)
+          }
+        })
+        .catch(err => {
+          console.log('wawwawawa', err)
+          if (err.name === 'AbortError') return
+          console.error(err)
+        })
+    })
+
+    return {
+      abort: () => abortController.abort(), promise
+    }
   }
 
   const showRecent = !((searchQuery) ? (resultsForQuery !== '' || isValidONSName) : false)

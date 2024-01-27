@@ -1,6 +1,6 @@
 import { OnsRecord } from '@/shared/model/ons-record'
 import { blockToDate } from '@/shared/utils'
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 import _ from 'lodash'
 import {
   ColumnDef,
@@ -83,7 +83,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
       size: 100,
     }
   ]
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
     return _.uniqBy([...exactResults ?? [], ...data ?? []], 'transactionId')
   }, [data, exactResults])
