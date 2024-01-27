@@ -1,0 +1,23 @@
+{
+  "title": "ONS Registry",
+  "description": "Open OXEN Name System list, updated automatically from the blockchain. Easily lookup ONS names and get all authors usernames.",
+  "search": {
+    "placeholder": "Search ONS names",
+    "no_results": "No results found"
+  },
+  "ons_record": {
+    "name_unhashed": {
+      "label": "Name"
+    },
+    "name_hashed": {
+      "label": "Hashed name",
+      "hint": "We couldn't un-hash this name. It is probably something very unique. If you know what it is, type it to search and it will automatically be saved for other users."
+    },
+    "owner": {
+      "label": "Owner",
+      "owner_type_wallet": "Address of OXEN wallet that bought this ONS mapping",
+      "owner_type_keypair": "ed25519 keypair of owner"
+    },
+    
+  }
+}
