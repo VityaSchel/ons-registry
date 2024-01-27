@@ -15,6 +15,7 @@ export function Search() {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [exactResults, setExactResults] = React.useState<null | OnsRecord[]>(null)
   const [recentOns, setRecentOns] = React.useState<null | OnsRecord[]>(null)
+  const [total, setTotal] = React.useState<null | number>(null)
 
   const isValidONSName = React.useMemo(() => {
     return new RegExp('^\\w([\\w-]*[\\w])?$', 'g')
@@ -23,7 +24,10 @@ export function Search() {
 
   const isValidOwner = React.useMemo(() => {
     return new RegExp('^[0-9a-fA-F]+$', 'g')
+      .test(searchQuery)
   }, [searchQuery])
+
+  const isValidQuery = isValidONSName || isValidOwner
 
   React.useEffect(() => {
     if(searchQuery === '') {
@@ -32,29 +36,41 @@ export function Search() {
   }, [searchQuery])
 
   React.useEffect(() => {
-    if(isValidONSName) {
+    if (isValidQuery) {
       if(searchQuery !== resultsForQuery) {
         setSearchResults(null)
         setExactResults(null)
         if (searchQuery) {
-          const searchResults = search(searchQuery)
-          const exactSearchResults = exactSearch(searchQuery)
+          const searchResults = search(searchQuery, mode)
           searchResults.promise
-            .then(setSearchResults)
-          exactSearchResults.promise
-            .then(setExactResults)
-          Promise.all([searchResults.promise, exactSearchResults.promise])
-            .then(() => {
+            .then(({ mappings, total }) => {
+              setSearchResults(mappings)
+              setTotal(total)
+            })
+          if(mode === 'names') {
+            const exactSearchResults = exactSearch(searchQuery)
+            exactSearchResults.promise
+              .then(setExactResults)
+            Promise.all([searchResults.promise, exactSearchResults.promise])
+              .then(() => {
+                setResultsForQuery(searchQuery)
+              })
+            return () => {
+              searchResults.abort()
+              exactSearchResults.abort()
+            }
+          } else {
+            searchResults.promise.then(() => {
               setResultsForQuery(searchQuery)
             })
-          return () => {
-            searchResults.abort()
-            exactSearchResults.abort()
+            return () => {
+              searchResults.abort()
+            }
           }
         }
       }
     }
-  }, [searchQuery, isValidONSName, resultsForQuery])
+  }, [searchQuery, isValidQuery, resultsForQuery, mode])
 
   React.useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
@@ -63,26 +79,34 @@ export function Search() {
     }))
       .then(res => res.json())
       .then(json => {
-        const records = json as OnsRecord[]
+        const records = json as { mappings: OnsRecord[], total: number } | { ok: false, error: string }
+        if ('error' in records) throw new Error(records.error)
         setRecentOns(
-          records.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
+          records.mappings.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
         )
+        setTotal(records.total)
       })
       .catch(err => console.error(err))
   }, [])
 
-  const search = (searchQuery: string) => {
+  const search = (searchQuery: string, mode: 'names' | 'by_author') => {
     const abortController = new AbortController()
 
-    const promise = new Promise<OnsRecord[] | null>(resolve => {
+    const promise = new Promise<{ mappings: OnsRecord[], total: number }>(resolve => {
       fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
-        ...(searchQuery && { query: searchQuery }),
+        ...(mode === 'names' && searchQuery && { query: searchQuery }),
         limit: '100',
-        type: 'session'
+        type: 'session',
+        ...(mode === 'by_author' && { owner: searchQuery })
       }), { signal: abortController.signal })
         .then(res => res.json())
         .then(json => {
-          resolve(json as OnsRecord[])
+          const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+          if ('error' in result) throw new Error(result.error)
+          resolve({ 
+            mappings: result.mappings,
+            total: result.total
+          })
         })
         .catch(err => {
           if (err.name === 'AbortError') return
@@ -105,7 +129,7 @@ export function Search() {
       )
         .then(res => res.json())
         .then(json => {
-          const result = json as OnsRecord[] | { ok: false, error: string }
+          const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
           if ('error' in result) {
             if(result.error === 'NOT_FOUND') {
               resolve(null)
@@ -114,7 +138,7 @@ export function Search() {
               throw new Error(result.error)
             }
           } else {
-            resolve(result)
+            resolve(result.mappings)
           }
         })
         .catch(err => {
@@ -130,8 +154,45 @@ export function Search() {
 
   const showRecent = !((searchQuery) ? (resultsForQuery !== '' || isValidONSName) : false)
 
+  const loading = showRecent
+    ? recentOns === null
+    : searchResults === null && exactResults === null
+
+  const tableContents = showRecent
+    ? recentOns
+    : searchResults
+
+  const handleLoadMore = () => {
+    fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+      ...(searchQuery && { query: searchQuery }),
+      limit: '100',
+      max_block: String(tableContents?.[tableContents?.length - 1]?.updatedAtBlock ?? 0),
+      type: 'session'
+    }))
+      .then(res => res.json())
+      .then(json => {
+        const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+        if ('error' in result) throw new Error(result.error)
+        if(showRecent) {
+          setRecentOns([
+            ...recentOns as OnsRecord[],
+            ...result.mappings
+          ])
+        } else {
+          setSearchResults([
+            ...searchResults as OnsRecord[],
+            ...result.mappings
+          ])
+        }
+        setTotal(result.total)
+      })
+      .catch(err => {
+        console.error(err)
+      })
+  }
+
   return (
-    <div className='flex flex-col gap-20 items-center max-w-full'>
+    <div className='flex flex-col gap-8 items-center max-w-full'>
       <div className='flex flex-col gap-2'>
         <input
           type="text"
@@ -164,18 +225,29 @@ export function Search() {
           </Link>
         </div>
       </div>
-      {!showRecent ? (
-        <ONSRecordsTable
-          data={searchResults}
-          exactResults={exactResults}
-          loading={searchResults === null && exactResults === null}
-        />
-      ) : (
-        <ONSRecordsTable
-          data={recentOns ?? []}
-          loading={recentOns === null}
-        />
-      )}
+      <div className='mt-12 w-full'>
+        {!showRecent ? (
+          <ONSRecordsTable
+            data={searchResults}
+            exactResults={exactResults}
+            loading={searchResults === null && exactResults === null}
+          />
+        ) : (
+          <ONSRecordsTable
+            data={recentOns ?? []}
+            loading={recentOns === null}
+          />
+        )}
+      </div>
+      <div className='flex flex-col gap-2 items-center'>
+        {Boolean(total && !loading) && <span className='text-sm font-normal'>{t('pagination.showing')
+          .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
+          .replace('{total}', String(total))
+        }</span>}
+        <Button variant='outline' onClick={handleLoadMore}>
+          {t('pagination.load_more')}
+        </Button>
+      </div>
     </div>
   )
 }

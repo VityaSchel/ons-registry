@@ -38,5 +38,9 @@
     "updated_at_time": {
       "label": "Дата обновления"
     }
+  },
+  "pagination": {
+    "showing": "Отображено {showing} из {total} результатов",
+    "load_more": "Загрузить еще"
   }
 }

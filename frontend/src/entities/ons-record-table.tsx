@@ -162,6 +162,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
     state: {
       sorting,
     },
+    getRowId: (row) => row.transactionId,
   })
 
   const columnWidths = ['33%', '67%', '33%', '200px']

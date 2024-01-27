@@ -54,14 +54,6 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
   }
 })
 
-fastify.get<{ Params: { owner: string } }>('/owner/:owner', async (request, reply) => {
-  const owner = request.params.owner
-  const mappings = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE owner = (?)', owner)
-  reply.send(
-    await Promise.all(mappings.map(mapOnsRecord))
-  )
-})
-
 fastify.get('/list', async (request, reply) => {
   const query = await z.object({
     query: z.string()
@@ -72,11 +64,11 @@ fastify.get('/list', async (request, reply) => {
     type: z.string()
       .transform(value => value.split(','))
       .optional(),
-    maxBlock: z.coerce.number()
+    max_block: z.coerce.number()
       .int()
       .positive()
       .optional(),
-    minBlock: z.coerce.number()
+    min_block: z.coerce.number()
       .int()
       .positive()
       .optional(),
@@ -84,13 +76,15 @@ fastify.get('/list', async (request, reply) => {
       .int()
       .positive()
       .optional(),
-    sortBy: z.enum([
+    sort_by: z.enum([
       'updatedAtBlock',
     ]).optional(),
-    sortDir: z.enum([
+    sort_dir: z.enum([
       'ASC',
       'DESC',
     ]).optional(),
+    owner: z.string()
+      .optional(),
   }).safeParse(request.query)
   if(!query.success) {
     reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
@@ -98,35 +92,51 @@ fastify.get('/list', async (request, reply) => {
   }
   const sortBy = {
     updatedAtBlock: 'mappings.updated_at_block',
-  }[query.data.sortBy ?? 'updatedAtBlock']
-  const sortDir = query.data.sortDir ?? 'DESC'
+  }[query.data.sort_by ?? 'updatedAtBlock']
+  const sortDir = query.data.sort_dir ?? 'DESC'
   const types = query.data.type
     ? query.data.type.filter(e => ['session', 'wallet', 'lokinet'].includes(e)) 
       .map(e => `'${e}'`)
       .join(',')
     : '\'session\',\'wallet\',\'lokinet\''
+  const filters = `
+    ${query.data.query ? 'AND hashes.string LIKE :query' : ''}
+    ${query.data.min_block ? 'AND mappings.updated_at_block >= :minBlock' : ''}
+    ${query.data.max_block ? 'AND mappings.updated_at_block <= :maxBlock' : ''}
+    ${query.data.owner ? 'AND mappings.owner = :owner' : ''}
+  `
+  const filtersVariables = {
+    ...(query.data.query && { ':query': `%${query.data.query}%` }),
+    ...(query.data.min_block && { ':minBlock': query.data.min_block }),
+    ...(query.data.max_block && { ':maxBlock': query.data.max_block }),
+    ...(query.data.owner && { ':owner': query.data.owner }),
+  }
   const mappings = await ons.all<OnsMapping[]>(`
     SELECT mappings.*, hashes.string AS name
     FROM mappings
     LEFT JOIN hashes ON mappings.name_hash = hashes.hash
     WHERE mappings.type IN (${types})
-    ${query.data.query ? 'WHERE hashes.string LIKE :query' : ''}
+    ${filters}
     ORDER BY ${sortBy} ${sortDir}
     LIMIT (:limit)
   `, {
     ':limit': query.data.limit ?? 100,
-    ...(query.data.query && { ':query': `%${query.data.query}%` })
+    ...filtersVariables
   })
   const onsRecords = await Promise.all(mappings.map(mapOnsRecord))
-  const total = await ons.get<{ count: number }>(`
+  const total = await ons.get<{ 'COUNT(*)': number }>(`
     SELECT COUNT(*)
     FROM mappings
-    WHERE mappings.type IN (${types});
-  `)
+    WHERE mappings.type IN (${types})
+    ${filters}
+  `, {
+    ...filtersVariables
+  })
 
   reply.send({
+    ok: true,
     mappings: onsRecords,
-    total: total?.count ?? 0,
+    total: total?.['COUNT(*)'] ?? 0,
   })
 })
 
