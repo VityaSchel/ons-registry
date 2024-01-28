@@ -41,16 +41,20 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
       await ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
     }
     reply.send(
-      mappings.map(mapping => ({
-        name: unhashedName,
-        owner: mapping.owner,
-        backupOwner: mapping.backup_owner,
-        sessionId: decryptONSValue(mapping.value, unhashedName),
-        transactionId: mapping.transaction_id,
-        updatedAtBlock: mapping.updated_at_block,
-        expiresAtBlock: mapping.expires_at_block,
-        action: mapping.action,
-      }))
+      mappings.map(mapping => {
+        const sessionID = decryptONSValue(mapping.value, unhashedName)
+        return {
+          name: unhashedName,
+          owner: mapping.owner,
+          backupOwner: mapping.backup_owner,
+          sessionId: sessionID,
+          ...(sessionID && { sessionIdEncrypted: mapping.value }),
+          transactionId: mapping.transaction_id,
+          updatedAtBlock: mapping.updated_at_block,
+          expiresAtBlock: mapping.expires_at_block,
+          action: mapping.action,
+        }
+      })
     )
   }
 })
