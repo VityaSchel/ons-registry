@@ -16,7 +16,7 @@ const fastify = Fastify({
 })
 
 await fastify.register(cors, {
-  origin: ['http://localhost:8777']
+  origin: ['http://localhost:8777', 'https://ons.sessionbots.directory']
 })
 
 const ons = await open({
