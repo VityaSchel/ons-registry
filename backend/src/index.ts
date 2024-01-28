@@ -48,7 +48,7 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
           owner: mapping.owner,
           backupOwner: mapping.backup_owner,
           sessionId: sessionID,
-          ...(sessionID && { sessionIdEncrypted: mapping.value }),
+          ...(sessionID === null && { sessionIdEncrypted: mapping.value }),
           transactionId: mapping.transaction_id,
           updatedAtBlock: mapping.updated_at_block,
           expiresAtBlock: mapping.expires_at_block,
