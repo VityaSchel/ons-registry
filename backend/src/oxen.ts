@@ -95,7 +95,7 @@ export async function sync() {
     const transactions: string[] = []
     for(let i = 0; i < blocks.length; i++) {
       const block = blocks[i]
-      console.log(`Fetching block ${i}/${blocks.length} (${block.height}) ${block.hash}`)
+      console.log(`Fetching block ${i+1}/${blocks.length} (${block.height}) ${block.hash}`)
       const blockInfo = await fetch('http://public-eu.optf.ngo:22023/json_rpc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
