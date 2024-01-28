@@ -8,7 +8,7 @@ import { OnsMapping } from './schema.js'
 import { onsNameRegex, validOnsName } from './ons-name-regex.js'
 import cors from '@fastify/cors'
 import { z } from 'zod'
-import { sync } from 'src/oxen.js'
+import { sync } from './oxen.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
