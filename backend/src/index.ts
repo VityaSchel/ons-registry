@@ -151,7 +151,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
     owner: mapping.owner,
     backupOwner: mapping.backup_owner,
     sessionId: unhashedName ? sessionID : null,
-    ...((unhashedName === null || sessionID === null) && { sessionIdEncrypted: mapping.value }),
+    ...(sessionID === null && { sessionIdEncrypted: mapping.value }),
     transactionId: mapping.transaction_id,
     updatedAtBlock: mapping.updated_at_block,
     expiresAtBlock: mapping.expires_at_block,
