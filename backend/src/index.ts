@@ -127,6 +127,7 @@ fastify.get('/list', async (request, reply) => {
   const total = await ons.get<{ 'COUNT(*)': number }>(`
     SELECT COUNT(*)
     FROM mappings
+    LEFT JOIN hashes ON mappings.name_hash = hashes.hash
     WHERE mappings.type IN (${types})
     ${filters}
   `, {

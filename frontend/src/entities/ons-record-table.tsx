@@ -26,11 +26,14 @@ import { GoQuestion } from 'react-icons/go'
 import { LuKeySquare } from 'react-icons/lu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/shadcn/ui/tooltip'
 import OxenLogo from '@/assets/oxen-logo.svg'
+import copy from 'copy-to-clipboard'
+import { toast } from 'sonner'
 
-export function ONSRecordsTable({ data, loading = false, exactResults }: {
+export function ONSRecordsTable({ data, loading = false, exactResults, onSortChange }: {
   data: OnsRecord[] | null
   loading?: boolean
   exactResults?: OnsRecord[] | null
+  onSortChange: (sorting: SortingState) => void
 }) {
   const { t, i18n } = useTranslation('common')
   const language = i18n.language
@@ -64,11 +67,35 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
     {
       accessorKey: 'sessionId',
       header: t('ons_record.value.label'),
-      cell: ({ row }) => (
-        <span className='text-ellipsis overflow-hidden max-w-full block'>
-          {row.getValue('sessionId') ?? (
+      cell: ({ row }) => {
+        const name = row.getValue('name') as string | null
+        const sessionID = row.getValue('sessionId') as string | null
+
+        const handleCopy = () => {
+          if (!sessionID) return
+          copy(sessionID)
+          toast.success(t('ons_record.value.copied'))
+        }
+
+        return (
+          sessionID ? (
+            <TooltipProvider>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <button onClick={handleCopy} className='text-ellipsis overflow-hidden max-w-full block'>
+                    {sessionID}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className='bg-muted'>
+                  <p className='max-w-80 text-white'>
+                    {t('copy')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
             <span className='text-neutral-600 flex gap-2 items-center'>
-              {t('ons_record.value_encrypted.label')}
+              {name ? t('ons_record.value_encrypted.label_legacy_argon2') : t('ons_record.value_encrypted.label_hashed_name')}
               <TooltipProvider>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
@@ -77,14 +104,16 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className='bg-muted'>
-                    <p className='max-w-80 text-white'>{t('ons_record.value_encrypted.hint')}</p>
+                    <p className='max-w-80 text-white'>
+                      {name ? t('ons_record.value_encrypted.hint_legacy_argon2') : t('ons_record.value_encrypted.hint_hashed_name')}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </span>
-          )}
-        </span>
-      ),
+          )
+        )
+      },
       size: 200,
     },
     {
@@ -93,6 +122,12 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
       cell: ({ row }) => {
         const owner = row.getValue('owner') as string
         const isWallet = owner.length !== 160
+
+        const handleCopy = () => {
+          copy(owner)
+          toast.success(t('ons_record.owner.copied'))
+        }
+
         return (
           <div className='flex gap-2 items-center'>
             <TooltipProvider>
@@ -113,9 +148,20 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className='text-ellipsis overflow-hidden max-w-full block'>
-              {owner}
-            </span>
+            <TooltipProvider>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <button className='text-ellipsis overflow-hidden max-w-full block' onClick={handleCopy}>
+                    {owner}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className='bg-muted'>
+                  <p className='max-w-80 text-white'>
+                    {t('copy')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )
       },
@@ -157,8 +203,17 @@ export function ONSRecordsTable({ data, loading = false, exactResults }: {
     data: tableRows,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: (sort) => {
+      if (typeof sort === 'function') {
+        onSortChange(sort(sorting))
+      } else {
+        onSortChange(sort)
+      }
+
+      setSorting(sort)
+    },
+    // getSortedRowModel: getSortedRowModel(),
+    manualSorting: true,
     state: {
       sorting,
     },

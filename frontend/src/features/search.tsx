@@ -5,9 +5,12 @@ import { ONSRecordsTable } from '@/entities/ons-record-table'
 import cx from 'classnames'
 import { Button } from '@/shared/shadcn/ui/button'
 import Link from 'next/link'
+import { LuKeySquare } from 'react-icons/lu'
+import OxenLogoFull from '@/assets/oxen-logo-full.svg'
+import { SortingState } from '@tanstack/react-table'
 
 export function Search() {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
   const [mode, setMode] = React.useState<'names' | 'by_author'>('names')
 
   const [searchResults, setSearchResults] = React.useState<null | OnsRecord[]>(null)
@@ -16,6 +19,7 @@ export function Search() {
   const [exactResults, setExactResults] = React.useState<null | OnsRecord[]>(null)
   const [recentOns, setRecentOns] = React.useState<null | OnsRecord[]>(null)
   const [total, setTotal] = React.useState<null | number>(null)
+  const [recentOnsTotal, setRecentOnsTotal] = React.useState<null | number>(null)
 
   const isValidONSName = React.useMemo(() => {
     return new RegExp('^\\w([\\w-]*[\\w])?$', 'g')
@@ -32,8 +36,9 @@ export function Search() {
   React.useEffect(() => {
     if(searchQuery === '') {
       setResultsForQuery('')
+      setTotal(recentOnsTotal)
     }
-  }, [searchQuery])
+  }, [searchQuery, recentOnsTotal])
 
   React.useEffect(() => {
     if (isValidQuery) {
@@ -73,23 +78,37 @@ export function Search() {
   }, [searchQuery, isValidQuery, resultsForQuery, mode])
 
   React.useEffect(() => {
-    fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
-      limit: '100',
-      type: 'session'
-    }))
-      .then(res => res.json())
-      .then(json => {
-        const records = json as { mappings: OnsRecord[], total: number } | { ok: false, error: string }
-        if ('error' in records) throw new Error(records.error)
+    getRecentOns()
+      .then((records) => {
         setRecentOns(
           records.mappings.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
         )
         setTotal(records.total)
+        setRecentOnsTotal(records.total)
       })
-      .catch(err => console.error(err))
   }, [])
 
-  const search = (searchQuery: string, mode: 'names' | 'by_author') => {
+  const getRecentOns = (sort?: SortingState) => {
+    return new Promise<{ mappings: OnsRecord[], total: number }>(resolve => {
+      fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+        limit: '100',
+        type: 'session',
+        ...(sort && {
+          sort_by: sort[0].id,
+          sort_dir: sort[0].desc ? 'DESC' : 'ASC'
+        })
+      }))
+        .then(res => res.json())
+        .then(json => {
+          const records = json as { mappings: OnsRecord[], total: number } | { ok: false, error: string }
+          if ('error' in records) throw new Error(records.error)
+          resolve(records)
+        })
+        .catch(err => console.error(err))
+    })
+  }
+
+  const search = (searchQuery: string, mode: 'names' | 'by_author', sort?: SortingState) => {
     const abortController = new AbortController()
 
     const promise = new Promise<{ mappings: OnsRecord[], total: number }>(resolve => {
@@ -97,7 +116,11 @@ export function Search() {
         ...(mode === 'names' && searchQuery && { query: searchQuery }),
         limit: '100',
         type: 'session',
-        ...(mode === 'by_author' && { owner: searchQuery })
+        ...(mode === 'by_author' && { owner: searchQuery }),
+        ...(sort && {
+          sort_by: sort[0].id,
+          sort_dir: sort[0].desc ? 'DESC' : 'ASC'
+        })
       }), { signal: abortController.signal })
         .then(res => res.json())
         .then(json => {
@@ -117,6 +140,24 @@ export function Search() {
     return {
       abort: () => abortController.abort(), promise: promise 
     }
+  }
+
+  const handleSortResults = async (sort: SortingState) => {
+    setSearchResults(null)
+    const { promise } = search(searchQuery, mode, sort)
+    const results = await promise
+    setSearchResults(results.mappings)
+    setTotal(results.total)
+  }
+
+  const handleSortRecent = async (sort: SortingState) => {
+    setRecentOns(null)
+    const records = await getRecentOns(sort)
+    setRecentOns(
+      records.mappings.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
+    )
+    setTotal(records.total)
+    setRecentOnsTotal(records.total)
   }
 
   const exactSearch = (searchQuery: string) => {
@@ -162,6 +203,8 @@ export function Search() {
     ? recentOns
     : searchResults
 
+  const hasMore = total && tableContents && tableContents.length < total
+
   const handleLoadMore = () => {
     fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
       ...(searchQuery && { query: searchQuery }),
@@ -194,10 +237,35 @@ export function Search() {
   return (
     <div className='flex flex-col gap-8 items-center max-w-full'>
       <div className='flex flex-col gap-2'>
+        <span className='absolute ml-8 mt-6 transition-opacity duration-150 pointer-events-none' style={{
+          opacity: mode === 'by_author' ? 1 : 0,
+          color: searchQuery.length === 0 
+            ? '#aaaaaa' 
+            : searchQuery.length === 160
+              ? '#2563eb'
+              : '#5cc4ba'
+        }}>
+          {searchQuery.length === 0 ? (
+            <span>{t('search.search_by_owner_type')}</span>
+          ) : searchQuery.length === 160 ? (
+            <span className='flex items-center'>
+              <LuKeySquare color='#2563eb' className='mr-2' />
+              ED25519 keypair
+            </span>
+          ) : (
+            <span className='flex items-center'>
+              <span className='block w-fit h-5 bg-[#5cc4ba] p-1 rounded-sm mr-2'>
+                <OxenLogoFull className='h-full' />
+              </span>
+              Wallet
+            </span>
+          )}
+        </span>
         <input
           type="text"
-          className={cx('py-6 px-8 text-4xl rounded-lg shadow-lg shadow-slate-950/50 dark:shadow-slate-500/15 outline-none font-[Inter] bg-neutral-800 placeholder:text-neutral-600 max-w-full w-[800px] border-2 border-transparent transition-all duration-75', {
+          className={cx('py-6 px-8 text-4xl rounded-lg shadow-lg shadow-slate-950/50 dark:shadow-slate-500/15 outline-none font-[Inter] bg-neutral-800 placeholder:text-neutral-600 max-w-full w-[800px] border-2 border-transparent transition-all duration-75 h-[92px]', {
             '!border-red-500': searchQuery && !isValidONSName,
+            'text-sm pt-6 pb-0': mode === 'by_author'
           })}
           placeholder={mode === 'names' ? t('search.placeholder') : t('search.search_by_owner')}
           value={searchQuery}
@@ -210,14 +278,23 @@ export function Search() {
               variant='link'
               className='p-0'
               disabled={mode === 'names'}
-              onClick={() => setMode('names')}
+              onClick={() => {
+                if(searchQuery.length > 64) {
+                  setSearchQuery('')
+                }
+                setMode('names')
+                setResultsForQuery('')
+              }}
             >{t('search.search_names')}</Button>
             <span className='text-neutral-600'>|</span>
             <Button
               variant='link' 
               className='p-0'
               disabled={mode === 'by_author'}
-              onClick={() => setMode('by_author')}
+              onClick={() => {
+                setMode('by_author')
+                setResultsForQuery('')
+              }}
             >{t('search.search_by_owner')}</Button>
           </div>
           <Link href='https://hloth.dev' className='text-sm text-indigo-900' target='_blank' rel='noreferrer'>
@@ -225,17 +302,33 @@ export function Search() {
           </Link>
         </div>
       </div>
-      <div className='mt-12 w-full'>
+      <div className='mt-4 h-2 w-full flex gap-5 text-muted-foreground'>
+        {searchQuery && mode === 'by_author' && (<>
+          {total && <span>
+            {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}
+          </span>}
+          {total && total > 0 && <span>
+            {t('statistics.this_person_money').replace('{totalSum}', String(total * 7 ?? 0))}
+            {' '}{i18n.language === 'ru' 
+              ? <>(≈{(total * 7 * 60 * 0.8).toFixed(2)}RUB)</>
+              : <>(≈{(total * 7 * 0.8).toFixed(2)}USD)</>
+            }
+          </span>}
+        </>)}
+      </div>
+      <div className='mt-6 w-full'>
         {!showRecent ? (
           <ONSRecordsTable
             data={searchResults}
             exactResults={exactResults}
             loading={searchResults === null && exactResults === null}
+            onSortChange={handleSortResults}
           />
         ) : (
           <ONSRecordsTable
             data={recentOns ?? []}
             loading={recentOns === null}
+            onSortChange={handleSortRecent}
           />
         )}
       </div>
@@ -244,9 +337,9 @@ export function Search() {
           .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
           .replace('{total}', String(total))
         }</span>}
-        <Button variant='outline' onClick={handleLoadMore}>
+        {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
           {t('pagination.load_more')}
-        </Button>
+        </Button>}
       </div>
     </div>
   )

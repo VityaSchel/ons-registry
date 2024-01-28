@@ -5,7 +5,8 @@
     "placeholder": "Search ONS names...",
     "no_results": "No results found",
     "search_names": "Search names",
-    "search_by_owner": "Search by owner"
+    "search_by_owner": "Search by owner",
+    "search_by_owner_type": "Pase OXEN wallet address or keypair"
   },
   "ons_record": {
     "name_unhashed": {
@@ -16,7 +17,8 @@
       "hint": "We couldn't un-hash this name. It is probably something very unique. If you know what it is, type it to search and it will automatically be saved for other users."
     },
     "value": {
-      "label": "SessionID"
+      "label": "SessionID",
+      "copied": "SessionID copied to clipboard"
     },
     "value_encrypted": {
       "label": "Encrypted SessionID",
@@ -25,7 +27,8 @@
     "owner": {
       "label": "Owner",
       "owner_type_wallet": "Address of OXEN wallet that bought this ONS mapping",
-      "owner_type_keypair": "ed25519 keypair of owner"
+      "owner_type_keypair": "ed25519 keypair of owner",
+      "copied": "Owner copied to clipboard"
     },
     "transaction": {
       "label": "Transaction ID in OXEN blockchain",
@@ -42,5 +45,10 @@
   "pagination": {
     "showing": "Отображено {showing} из {total} результатов",
     "load_more": "Загрузить еще"
-  }
+  },
+  "statistics": {
+    "this_person_owns": "This person owns {total} ONS",
+    "this_person_money": "Total cost of them is {totalSum} OXEN"
+  },
+  "copy": "Copy"
 }
