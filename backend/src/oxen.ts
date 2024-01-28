@@ -85,7 +85,6 @@ export async function sync() {
         })
       })
         .then(req => req.json()) as { result: { headers: BlockHeader[] } }
-      console.log(blocksChunk)
       blocks.push(
         ...blocksChunk.result.headers
           .filter(block => block.num_txes > 0)
