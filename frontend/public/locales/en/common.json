@@ -6,7 +6,7 @@
     "no_results": "No results found",
     "search_names": "Search names",
     "search_by_owner": "Search by owner",
-    "search_by_owner_type": "Pase OXEN wallet address or keypair"
+    "search_by_owner_type": "Paste OXEN wallet address or keypair"
   },
   "ons_record": {
     "name_unhashed": {
@@ -21,8 +21,10 @@
       "copied": "SessionID copied to clipboard"
     },
     "value_encrypted": {
-      "label": "Encrypted SessionID",
-      "hint": "We couldn't un-hash this name, thus it's impossible to know whom it belongs to. If you know what it is, type it to search and it will automatically be saved for other users."
+      "label_hashed_name": "Encrypted SessionID",
+      "label_legacy_argon2": "Legacy encryption",
+      "hint_hashed_name": "We couldn't un-hash this name, thus it's impossible to know whom it belongs to. If you know what it is, type it to search and it will automatically be saved for other users.",
+      "hint_legacy_argon2": "We couldn't decrypt this field because it uses a legacy argon2id algorithm without salt. We are working on adding decryption for such fields."
     },
     "owner": {
       "label": "Owner",
@@ -43,8 +45,8 @@
     }
   },
   "pagination": {
-    "showing": "Отображено {showing} из {total} результатов",
-    "load_more": "Загрузить еще"
+    "showing": "Showing {showing} of {total} results",
+    "load_more": "Load more"
   },
   "statistics": {
     "this_person_owns": "This person owns {total} ONS",
@@ -56,6 +58,7 @@
     "links": "Check other cool projects",
     "made_by": "Proudly made in two sleepless nights by",
     "author": "Viktor Shchelochkov",
-    "for": "for OXEN community"
+    "for": "for OXEN community",
+    "telegram": "Telegram channel"
   }
 }

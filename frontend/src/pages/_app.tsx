@@ -10,8 +10,8 @@ function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="dark"
+      // enableSystem
       disableTransitionOnChange
     >
       <Toaster richColors />

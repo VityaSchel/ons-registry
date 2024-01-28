@@ -43,25 +43,27 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       header: t('ons_record.name_unhashed.label'),
       size: 100,
       cell: ({ row }) => (
-        <span className='text-ellipsis overflow-hidden max-w-full block'>
-          {row.getValue('name') ?? (
-            <span className='text-neutral-600 flex gap-2 items-center'>
-              {t('ons_record.name_hashed.label')}
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <button>
-                      <GoQuestion />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className='bg-muted'>
-                    <p className='max-w-80 text-white'>{t('ons_record.name_hashed.hint')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </span>
-          )}
-        </span>
+        row.getValue('name') ? (
+          <span className='text-ellipsis overflow-hidden max-w-full block'>
+            {row.getValue('name') as string}
+          </span>
+        ) : (
+          <span className='text-neutral-600 flex gap-2 items-center'>
+            {t('ons_record.name_hashed.label')}
+            <TooltipProvider>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button>
+                    <GoQuestion />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className='bg-muted'>
+                  <p className='max-w-80 text-white'>{t('ons_record.name_hashed.hint')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </span>
+        )
       ),
     },
     {
@@ -133,7 +135,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
             <TooltipProvider>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
-                  <button className='w-12'>
+                  <button className='w-4 shrink-0'>
                     {!isWallet ? (
                       <LuKeySquare color='#2563eb' />
                     ) : (
@@ -182,7 +184,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       },
       cell: ({ row }) => {
         const updatedAtBlock = row.getValue('updatedAtBlock') as number
-        return updatedAtBlock >= 650000
+        const content = updatedAtBlock >= 650000
           ? Intl.DateTimeFormat([language], {
             year: 'numeric',
             month: 'short',
@@ -191,6 +193,10 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
             minute: 'numeric',
           }).format(blockToDate(updatedAtBlock) as Date)
           : '[Before 24 oct 2020]'
+        // className='hidden md:block'
+        return (<>
+          <span>{content}</span>
+        </>)
       },
       size: 100,
     }
@@ -220,20 +226,31 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
     getRowId: (row) => row.transactionId,
   })
 
+  // const [matches, setMatches] = React.useState(
+  //   window.matchMedia('(min-width: 768px)').matches
+  // )
+
+  // React.useEffect(() => {
+  //   window
+  //     .matchMedia('(min-width: 768px)')
+  //     .addEventListener('change', e => setMatches(e.matches))
+  // }, [])
+
   const columnWidths = ['33%', '67%', '33%', '200px']
   // const columnFlexes = ['1', '2', '1', '1']
 
   return (
-    <div className="rounded-md border max-w-full w-[1200px]">
-      <Table className='w-full max-w-full table-fixed'>
+    <div className="rounded-md border max-w-full md:w-[1200px]">
+      <Table className='w-[800px] md:w-full max-w-[800px] md:max-w-full table-fixed'>
         <TableHeader className='w-full max-w-full'>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id} style={{
-                    width: columnWidths[header.index],
-                  }}>
+                  <TableHead 
+                    key={header.id}
+                    style={{ width: columnWidths[header.index] }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(

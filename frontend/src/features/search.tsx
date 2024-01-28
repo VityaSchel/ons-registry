@@ -236,8 +236,9 @@ export function Search() {
 
   return (
     <div className='flex flex-col gap-8 items-center max-w-full'>
-      <div className='flex flex-col gap-2'>
-        <span className='absolute ml-8 mt-6 transition-opacity duration-150 pointer-events-none' style={{
+      <div className='flex flex-col gap-2 max-w-full relative'>
+        <span className='absolute left-8 top-6 transition-opacity duration-150 pointer-events-none text-ellipsis overflow-hidden max-w-full line-clamp-1 break-all' style={{
+          width: 'calc(100% - 4rem)',
           opacity: mode === 'by_author' ? 1 : 0,
           color: searchQuery.length === 0 
             ? '#aaaaaa' 
@@ -302,7 +303,7 @@ export function Search() {
           </Link>
         </div>
       </div>
-      <div className='mt-4 h-2 w-full flex gap-5 text-muted-foreground'>
+      <div className='mt-4 h-2 w-full flex gap-5 text-muted-foreground text-sm md:text-base'>
         {searchQuery && mode === 'by_author' && (<>
           {total && <span>
             {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}

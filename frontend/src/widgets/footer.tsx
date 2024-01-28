@@ -1,40 +1,45 @@
 import { CopyButton } from '@/entities/copy-button'
 import { useTranslation } from 'next-i18next'
 import Link from 'next/link'
+import TeleramLogo from '@/assets/telegram.svg'
 
 export function Footer() {
   const { t } = useTranslation('common')
 
   return (
-    <footer className='bg-indigo-950 bg-opacity-30 p-12 flex gap-12'>
-      <div className='flex flex-col gap-4'>
-        <h2 className='text-3xl font-bold'>{t('footer.donate')}</h2>
-        <CopyButton
-          content={'L6j1Kam6QQfKetnvxwyAbe2eUPFuL1bZuYeDWepm7G7cM8cGh3EZBgncrpkMFN5sRKP2pWGLdxpbLf5DRYSnhBY2PypkhLC'}
-          className='md:w-auto w-full'
-        >
-          OXEN:
-          <span className='font-mono ml-2'>
-            L6j1Kam6QQ…BY2PypkhLC
-          </span>
-        </CopyButton>
-        <CopyButton
-          content={'43MTCc7BsyZip4YUpRSqGahUPf8NefifvW6KXEXttTXicTbMfAehtny26HuU84pzQNQmodxzWoTaPAL5aqPjAUo4DtkvXBV'}
-          className='md:w-auto w-full'
-        >
-          XMR:
-          <span className='font-mono ml-2'>
-            43MTCc7Bsy…Uo4DtkvXBV
-          </span>
-        </CopyButton>
+    <footer className='bg-indigo-950 bg-opacity-30 px-4 md:px-10 py-12 flex justify-center relative overflow-clip'>
+      <div className='flex flex-col sm:flex-row flex-wrap gap-12 smwht:gap-6 900:gap-12 w-[1200px] max-w-full'>
+        <div className='flex flex-col gap-4 max-w-full'>
+          <h2 className='smwht:h-16 lg:h-auto text-2xl 900:text-3xl font-bold'>{t('footer.donate')}</h2>
+          <CopyButton
+            content={'L6j1Kam6QQfKetnvxwyAbe2eUPFuL1bZuYeDWepm7G7cM8cGh3EZBgncrpkMFN5sRKP2pWGLdxpbLf5DRYSnhBY2PypkhLC'}
+            className='w-full md:w-full text-left'
+          >
+            OXEN:
+            <span className='font-mono ml-2 hidden md:block'>L6j1Kam6QQ…BY2PypkhLC</span>
+            <span className='font-mono ml-2 md:hidden'>L6j1Kam6QQfKetnvxwyAbe2eUPFuL1bZuYeDWepm7G7cM8cGh3EZBgncrpkMFN5sRKP2pWGLdxpbLf5DRYSnhBY2PypkhLC</span>
+          </CopyButton>
+          <CopyButton
+            content={'43MTCc7BsyZip4YUpRSqGahUPf8NefifvW6KXEXttTXicTbMfAehtny26HuU84pzQNQmodxzWoTaPAL5aqPjAUo4DtkvXBV'}
+            className='w-full md:w-full text-left'
+          >
+            XMR:
+            <span className='font-mono ml-2 hidden md:block'>43MTCc7Bsy…Uo4DtkvXBV</span>
+            <span className='font-mono ml-2 md:hidden'>43MTCc7BsyZip4YUpRSqGahUPf8NefifvW6KXEXttTXicTbMfAehtny26HuU84pzQNQmodxzWoTaPAL5aqPjAUo4DtkvXBV</span>
+          </CopyButton>
+        </div>
+        <div className='flex flex-col gap-5'>
+          <h2 className='smwht:h-16 lg:h-auto text-2xl 900:text-3xl font-bold'>{t('footer.links')}</h2>
+          <Link href='https://sessionbots.directory/' className='hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg' target='_blank' rel='noreferrer'>sessionbots.directory</Link>
+          <Link href='https://t.me/session_nodejs' className='hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2' target='_blank' rel='noreferrer'>
+            <TeleramLogo height={20} /> {t('footer.telegram')}
+          </Link>
+        </div>
+        <div className='ml-auto flex items-end text-muted w-48 text-right shrink-0'>
+          <span>{t('footer.made_by')} <Link href='https://github.com/vityaschel' className='font-semibold hover:text-indigo-600 transition-colors duration-200'>{t('footer.author')}</Link></span>
+        </div>
       </div>
-      <div className='flex flex-col gap-4'>
-        <h2 className='text-3xl font-bold'>{t('footer.links')}</h2>
-        <Link href='https://sessionbots.directory/' className='hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit'>sessionbots.directory</Link>
-      </div>
-      <div className='ml-auto flex items-end text-muted w-48 text-right'>
-        <span>{t('footer.made_by')} <Link href='https://github.com/vityaschel' className='font-semibold hover:text-indigo-600 transition-colors duration-200'>{t('footer.author')}</Link></span>
-      </div>
+      <div className='pointer-events-none absolute bottom-[-65vw] bg-gradient-radial w-[120vw] h-auto aspect-square from-indigo-900 gradien via-transparent to-transparent opacity-20'></div>
     </footer>
   )
 }
