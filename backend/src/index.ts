@@ -8,6 +8,7 @@ import { OnsMapping } from './schema.js'
 import { onsNameRegex, validOnsName } from './ons-name-regex.js'
 import cors from '@fastify/cors'
 import { z } from 'zod'
+import { sync } from 'src/oxen.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -162,5 +163,12 @@ fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err
   console.log(`Server listening on ${address}`)
 })
+
+async function scheduleAutosync() {
+  await sync()
+  await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 2))
+}
+
+scheduleAutosync()
 
 export { ons }

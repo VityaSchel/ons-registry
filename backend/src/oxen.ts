@@ -55,7 +55,7 @@ type OnsRecord = {
   action?: 'update' | 'buy' | 'renew'
 }
 
-async function sync() {
+export async function sync() {
   const blocks = await fetch('http://public-eu.optf.ngo:22023/json_rpc', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -203,5 +203,3 @@ async function migrateOnsDb(pathToOnsDb: string) {
 
   await appendOnsRecords(onsRecords)
 }
-
-sync()
