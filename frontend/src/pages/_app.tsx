@@ -4,6 +4,7 @@ import { appWithTranslation } from 'next-i18next'
 import type { AppProps } from 'next/app'
 import { ThemeProvider } from '@/app/theme-provider'
 import { Toaster } from 'sonner'
+import { Footer } from '@/widgets/footer'
 
 function App({ Component, pageProps }: AppProps) {
   return (
@@ -15,6 +16,7 @@ function App({ Component, pageProps }: AppProps) {
     >
       <Toaster richColors />
       <Component {...pageProps} />
+      <Footer />
     </ThemeProvider>
   )
 }
