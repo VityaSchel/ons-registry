@@ -199,7 +199,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   }
 }
 
-fastify.listen({ port: 6801, host: '192.168.0.120' }, (err, address) => {
+fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err
   console.log(`Server listening on ${address}`)
 })
