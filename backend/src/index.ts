@@ -103,6 +103,10 @@ fastify.get('/list', async (request, reply) => {
     ]).optional(),
     owner: z.string()
       .optional(),
+    offset: z.coerce.number()
+      .int()
+      .min(0)
+      .optional(),
   }).safeParse(request.query)
   if(!query.success) {
     reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
@@ -137,8 +141,10 @@ fastify.get('/list', async (request, reply) => {
     ${filters}
     ORDER BY ${sortBy} ${sortDir}
     LIMIT (:limit)
+    OFFSET (:offset)
   `, {
     ':limit': query.data.limit ?? 100,
+    ':offset': query.data.offset ?? 0,
     ...filtersVariables
   })
   const onsRecords = await Promise.all(mappings.map(mapOnsRecord))

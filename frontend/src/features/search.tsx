@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { LuKeySquare } from 'react-icons/lu'
 import OxenLogoFull from '@/assets/oxen-logo-full.svg'
 import { SortingState } from '@tanstack/react-table'
+import { Pagination as TablePagination } from '@/entities/table-pagination'
 
 export function Search() {
   const { t, i18n } = useTranslation('common')
@@ -20,6 +21,7 @@ export function Search() {
   const [recentOns, setRecentOns] = React.useState<null | OnsRecord[]>(null)
   const [total, setTotal] = React.useState<null | number>(null)
   const [recentOnsTotal, setRecentOnsTotal] = React.useState<null | number>(null)
+  const [displaying, setDisplaying] = React.useState<{ from: number, to: number } | null>()
 
   const isValidONSName = React.useMemo(() => {
     return new RegExp('^\\w([\\w-]*[\\w])?$', 'g')
@@ -37,6 +39,7 @@ export function Search() {
     if(searchQuery === '') {
       setResultsForQuery('')
       setTotal(recentOnsTotal)
+      setDisplaying({ from: 0, to: recentOns?.length ?? 0 })
     }
   }, [searchQuery, recentOnsTotal])
 
@@ -50,6 +53,7 @@ export function Search() {
           searchResults.promise
             .then(({ mappings, total }) => {
               setSearchResults(mappings)
+              setDisplaying({ from: 0, to: mappings.length })
               setTotal(total)
             })
           if(mode === 'names') {
@@ -81,8 +85,10 @@ export function Search() {
     getRecentOns()
       .then((records) => {
         setRecentOns(
-          records.mappings.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
+          records.mappings
+            .sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
         )
+        setDisplaying({ from: 0, to: records.mappings.length })
         setTotal(records.total)
         setRecentOnsTotal(records.total)
       })
@@ -153,9 +159,7 @@ export function Search() {
   const handleSortRecent = async (sort: SortingState) => {
     setRecentOns(null)
     const records = await getRecentOns(sort)
-    setRecentOns(
-      records.mappings.sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
-    )
+    setRecentOns(records.mappings)
     setTotal(records.total)
     setRecentOnsTotal(records.total)
   }
@@ -199,40 +203,47 @@ export function Search() {
     ? recentOns === null
     : searchResults === null && exactResults === null
 
-  const tableContents = showRecent
-    ? recentOns
-    : searchResults
+  const hasMore = displaying && displaying.to < (total ?? 0)
 
-  const hasMore = total && tableContents && tableContents.length < total
-
-  const handleLoadMore = () => {
-    fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+  const handleLoad = async (offset: number) => {
+    const result = await fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
       ...(searchQuery && { query: searchQuery }),
-      limit: '100',
-      max_block: String(tableContents?.[tableContents?.length - 1]?.updatedAtBlock ?? 0),
+      limit: '100', 
+      offset: String(offset),
       type: 'session'
     }))
-      .then(res => res.json())
-      .then(json => {
-        const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
-        if ('error' in result) throw new Error(result.error)
-        if(showRecent) {
-          setRecentOns([
-            ...recentOns as OnsRecord[],
-            ...result.mappings
-          ])
-        } else {
-          setSearchResults([
-            ...searchResults as OnsRecord[],
-            ...result.mappings
-          ])
-        }
-        setTotal(result.total)
-      })
-      .catch(err => {
-        console.error(err)
-      })
+      .then(res => res.json()) as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+    if ('error' in result) throw new Error(result.error)
+    return result.mappings as OnsRecord[]
   }
+
+  const handleLoadMore = async () => {
+    const records = await handleLoad(displaying?.to ?? 0)
+    if (showRecent) {
+      setRecentOns([
+        ...recentOns as OnsRecord[],
+        ...records
+      ])
+    } else {
+      setSearchResults([
+        ...searchResults as OnsRecord[],
+        ...records
+      ])
+    }
+    setDisplaying({ from: displaying?.from ?? 0, to: Math.min((displaying?.to ?? 0)+records.length, total ?? Number.MAX_SAFE_INTEGER) })
+  }
+
+  const handleChangePage = async (page: number) => {
+    const records = await handleLoad((page - 1) * 100)
+    if (showRecent) {
+      setRecentOns(records)
+    } else {
+      setSearchResults(records)
+    }
+    setDisplaying({ from: (page - 1) * 100, to: Math.min(page * 100, total ?? Number.MAX_SAFE_INTEGER)})
+  }
+
+  console.log(displaying, recentOns?.length, recentOns)
 
   return (
     <div className='flex flex-col gap-8 items-center max-w-full'>
@@ -317,30 +328,31 @@ export function Search() {
           </span>}
         </>)}
       </div>
-      <div className='mt-6 w-full'>
-        {!showRecent ? (
-          <ONSRecordsTable
-            data={searchResults}
-            exactResults={exactResults}
-            loading={searchResults === null && exactResults === null}
-            onSortChange={handleSortResults}
-          />
-        ) : (
-          <ONSRecordsTable
-            data={recentOns ?? []}
-            loading={recentOns === null}
-            onSortChange={handleSortRecent}
-          />
-        )}
-      </div>
-      <div className='flex flex-col gap-2 items-center'>
-        {Boolean(total && !loading) && <span className='text-sm font-normal'>{t('pagination.showing')
-          .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
-          .replace('{total}', String(total))
-        }</span>}
-        {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
-          {t('pagination.load_more')}
-        </Button>}
+      <div className='mt-6 w-full flex flex-col gap-6 items-center'>
+        <ONSRecordsTable
+          data={showRecent ? recentOns : searchResults}
+          exactResults={exactResults}
+          loading={showRecent ? recentOns === null : (searchResults === null && exactResults === null)}
+          onSortChange={showRecent ? handleSortRecent : handleSortResults}
+        />
+        <div className='flex flex-col gap-2 items-center'>
+          {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
+            {t('pagination.load_more')}
+          </Button>}
+        </div>
+        <div className='flex gap-2 items-center justify-between w-full'>
+          {Boolean(total && !loading) && <span className='text-sm font-normal'>{t('pagination.showing')
+            .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
+            .replace('{total}', String(total))
+          }</span>}
+          {total && (
+            <TablePagination
+              page={(displaying ? displaying.from / 100 : 0) + 1}
+              onChange={handleChangePage}
+              totalPages={Math.ceil(total / 100)}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -70,5 +70,6 @@
     "empty": "Empty",
     "update_block_height": "Update block height",
     "expiration_block_height": "Expiration block height"
-  }
+  },
+  "copied": "Copied"
 }

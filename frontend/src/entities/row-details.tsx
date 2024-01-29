@@ -10,6 +10,7 @@ import {
 import { Copy, CopyCheck } from 'lucide-react'
 import copy from 'copy-to-clipboard'
 import { useTranslation } from 'next-i18next'
+import { toast } from 'sonner'
 
 export function RowDetails({ record, onClose }: {
   record: OnsRecord | false
@@ -88,10 +89,12 @@ export function RowDetails({ record, onClose }: {
 
 function CopiableTd({ children }: { children: string | number }) {
   const [copied, setCopied] = React.useState(false)
+  const { t } = useTranslation()
 
   const handleCopy = () => {
     copy(children.toString())
     setCopied(true)
+    toast.success(t('copied'))
   }
 
   return (

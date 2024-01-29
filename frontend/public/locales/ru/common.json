@@ -70,5 +70,6 @@
     "empty": "Пусто",
     "update_block_height": "Обновлено в блоке с высотой",
     "expiration_block_height": "Истекает в блоке с высотой"
-  }
+  },
+  "copied": "Скопировано"
 }
