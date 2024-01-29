@@ -19,7 +19,7 @@ const fastify = Fastify({
 await fastify.register(cors, {
   origin: (origin, cb) => {
     if (!origin) {
-      cb(new Error('Not allowed'), false)
+      cb(null, 'ons.sessionbots.directory')
       return 
     }
     
@@ -34,7 +34,7 @@ await fastify.register(cors, {
       return
     }
 
-    cb(new Error('Not allowed'), false)
+    cb(null, 'ons.sessionbots.directory')
   }
 })
 

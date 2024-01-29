@@ -22,6 +22,7 @@ export function Search() {
   const [total, setTotal] = React.useState<null | number>(null)
   const [recentOnsTotal, setRecentOnsTotal] = React.useState<null | number>(null)
   const [displaying, setDisplaying] = React.useState<{ from: number, to: number } | null>()
+  const [recentOnsLoaded, setRecentOnsLoaded] = React.useState<{ from: number, to: number } | null>()
 
   const isValidONSName = React.useMemo(() => {
     return new RegExp('^\\w([\\w-]*[\\w])?$', 'g')
@@ -39,7 +40,7 @@ export function Search() {
     if(searchQuery === '') {
       setResultsForQuery('')
       setTotal(recentOnsTotal)
-      setDisplaying({ from: 0, to: recentOns?.length ?? 0 })
+      setDisplaying(recentOnsLoaded)
     }
   }, [searchQuery, recentOnsTotal])
 
@@ -91,6 +92,7 @@ export function Search() {
             .sort((a, b) => b.updatedAtBlock - a.updatedAtBlock)
         )
         setDisplaying({ from: 0, to: records.mappings.length })
+        setRecentOnsLoaded({ from: 0, to: records.mappings.length })
         setTotal(records.total)
         setRecentOnsTotal(records.total)
       })
@@ -221,28 +223,32 @@ export function Search() {
 
   const handleLoadMore = async () => {
     const records = await handleLoad(displaying?.to ?? 0)
+    const newDisplaying = { from: displaying?.from ?? 0, to: Math.min((displaying?.to ?? 0) + records.length, total ?? Number.MAX_SAFE_INTEGER) }
     if (showRecent) {
       setRecentOns([
         ...recentOns as OnsRecord[],
         ...records
       ])
+      setRecentOnsLoaded(newDisplaying)
     } else {
       setSearchResults([
         ...searchResults as OnsRecord[],
         ...records
       ])
     }
-    setDisplaying({ from: displaying?.from ?? 0, to: Math.min((displaying?.to ?? 0)+records.length, total ?? Number.MAX_SAFE_INTEGER) })
+    setDisplaying(newDisplaying)
   }
 
   const handleChangePage = async (page: number) => {
     const records = await handleLoad((page - 1) * 100)
+    const newDisplaying = { from: (page - 1) * 100, to: Math.min(page * 100, total ?? Number.MAX_SAFE_INTEGER) }
     if (showRecent) {
       setRecentOns(records)
+      setRecentOnsLoaded(newDisplaying)
     } else {
       setSearchResults(records)
     }
-    setDisplaying({ from: (page - 1) * 100, to: Math.min(page * 100, total ?? Number.MAX_SAFE_INTEGER)})
+    setDisplaying(newDisplaying)
   }
 
   return (
