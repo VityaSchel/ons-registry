@@ -347,10 +347,12 @@ export function Search() {
           </Button>}
         </div>
         <div className='flex gap-2 items-center justify-between w-full'>
-          {Boolean(total && !loading) && <span className='text-sm font-normal'>{t('pagination.showing')
-            .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
-            .replace('{total}', String(total))
-          }</span>}
+          {(total && !loading) ? (
+            <span className='text-sm font-normal'>{t('pagination.showing')
+              .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
+              .replace('{total}', String(total))
+            }</span>
+          ) : <span />}
           {Boolean(total) && total && (
             <TablePagination
               page={(displaying ? displaying.from / 100 : 0) + 1}
