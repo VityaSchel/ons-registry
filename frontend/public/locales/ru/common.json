@@ -60,5 +60,15 @@
     "author": "Виктором Щелочковым",
     "for": "для сообщества OXEN",
     "telegram": "Наш Telegram-канал"
+  },
+  "details": {
+    "hashed_name": "Захешированное имя",
+    "name_hash": "Хеш имени",
+    "encrypted_value": "Зашифрованное значение",
+    "transaction_id": "ID транзакции",
+    "backup_owner": "Резервный владелец",
+    "empty": "Пусто",
+    "update_block_height": "Обновлено в блоке с высотой",
+    "expiration_block_height": "Истекает в блоке с высотой"
   }
 }

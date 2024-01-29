@@ -7,7 +7,6 @@ import {
   SortingState,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { useTranslation } from 'next-i18next'
@@ -28,6 +27,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import OxenLogo from '@/assets/oxen-logo.svg'
 import copy from 'copy-to-clipboard'
 import { toast } from 'sonner'
+import { Key } from 'ts-key-enum'
+import { RowDetails } from '@/entities/row-details'
 
 export function ONSRecordsTable({ data, loading = false, exactResults, onSortChange }: {
   data: OnsRecord[] | null
@@ -37,7 +38,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
 }) {
   const { t, i18n } = useTranslation('common')
   const language = i18n.language
-  const columns: ColumnDef<OnsRecord>[] = [
+  const columns: ColumnDef<OnsRecord>[] = React.useMemo(() => [
     {
       accessorKey: 'name',
       header: t('ons_record.name_unhashed.label'),
@@ -53,7 +54,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
             <TooltipProvider>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <button>
+                  <button onClick={e => e.stopPropagation()}>
                     <GoQuestion />
                   </button>
                 </TooltipTrigger>
@@ -73,7 +74,8 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         const name = row.getValue('name') as string | null
         const sessionID = row.getValue('sessionId') as string | null
 
-        const handleCopy = () => {
+        const handleCopy = (e: React.MouseEvent<HTMLButtonElement>) => {
+          e.stopPropagation()
           if (!sessionID) return
           copy(sessionID)
           toast.success(t('ons_record.value.copied'))
@@ -101,7 +103,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
               <TooltipProvider>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
-                    <button>
+                    <button onClick={e => e.stopPropagation()}>
                       <GoQuestion />
                     </button>
                   </TooltipTrigger>
@@ -125,7 +127,8 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         const owner = row.getValue('owner') as string
         const isWallet = owner.length !== 160
 
-        const handleCopy = () => {
+        const handleCopy = (e: React.MouseEvent<HTMLButtonElement>) => {
+          e.stopPropagation()
           copy(owner)
           toast.success(t('ons_record.owner.copied'))
         }
@@ -135,7 +138,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
             <TooltipProvider>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
-                  <button className='w-4 shrink-0'>
+                  <button className='w-4 shrink-0' onClick={e => e.stopPropagation()}>
                     {!isWallet ? (
                       <LuKeySquare color='#2563eb' />
                     ) : (
@@ -200,7 +203,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       },
       size: 100,
     }
-  ]
+  ], [data, exactResults, language, loading, t])
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
     return _.uniqBy([...exactResults ?? [], ...data ?? []], 'transactionId')
@@ -239,8 +242,14 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
   const columnWidths = ['33%', '67%', '33%', '200px']
   // const columnFlexes = ['1', '2', '1', '1']
 
+  const [detailsOpen, setDetailsOpen] = React.useState<OnsRecord | false>(false)
+  const handleOpenDetails = (record: OnsRecord) => {
+    setDetailsOpen(record)
+  }
+
   return (
     <div className="rounded-md border max-w-full md:w-[1200px]">
+      <RowDetails record={detailsOpen} onClose={() => setDetailsOpen(false)} />
       <Table className='w-[800px] md:w-full max-w-[800px] md:max-w-full table-fixed'>
         <TableHeader className='w-full max-w-full'>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -266,7 +275,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         <TableBody className='w-full max-w-full'>
           {loading ? (
             [...new Array(3)].map((_, index) => (
-              <TableRow key={index} onClick={() => console.log(123)}>
+              <TableRow key={index}>
                 {columnWidths.map((width, i) => (
                   <TableCell className="text-center" style={{ width }} key={i}>
                     <Skeleton className="w-full h-[20px]"/>
@@ -280,7 +289,15 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className='w-full max-w-full'
+                  className='w-full max-w-full cursor-pointer'
+                  onClick={() => handleOpenDetails(row.original)}
+                  onKeyDown={e => {
+                    if (e.key === ' ' || e.key === 'Spacebar' || e.key === Key.Enter) { 
+                      e.preventDefault()
+                      handleOpenDetails(row.original)
+                    }
+                  }}
+                  tabIndex={0}
                 >
                   {row.getVisibleCells().map((cell, i) => (
                     <TableCell key={cell.id} style={{
