@@ -206,7 +206,10 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
   ], [data, exactResults, language, loading, t])
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
-    return _.uniqBy([...exactResults ?? [], ...data ?? []], 'transactionId')
+    return [
+      ...exactResults ?? [], 
+      ...(data ?? []).filter(mapping => !exactResults?.some(t => t.transactionId === mapping.transactionId))
+    ]
   }, [data, exactResults])
   const table = useReactTable({
     data: tableRows,

@@ -51,15 +51,16 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
   } else {
     const unhashRecord = await ons.get<OnsMapping[]>('SELECT * FROM hashes WHERE hash = (?)', hashedName)
     if (!unhashRecord) {
-      await ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
-      await ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
+      ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
+      ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
         unhashedName,
         decryptONSValue(mappings[0].value, unhashedName),
         hashedName,
       ])
     }
-    reply.send(
-      mappings.map(mapping => {
+    reply.send({ 
+      ok: true, 
+      mappings: mappings.map(mapping => {
         const sessionID = mapping.decrypted_value
         return {
           name: unhashedName,
@@ -73,7 +74,7 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
           action: mapping.action,
         }
       })
-    )
+    })
   }
 })
 

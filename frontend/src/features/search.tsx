@@ -59,7 +59,10 @@ export function Search() {
           if(mode === 'names') {
             const exactSearchResults = exactSearch(searchQuery)
             exactSearchResults.promise
-              .then(setExactResults)
+              .then(mappings => {
+                console.log('exactSEarch', mappings)
+                setExactResults(mappings)
+              })
             Promise.all([searchResults.promise, exactSearchResults.promise])
               .then(() => {
                 setResultsForQuery(searchQuery)
@@ -345,7 +348,7 @@ export function Search() {
             .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
             .replace('{total}', String(total))
           }</span>}
-          {total && (
+          {Boolean(total) && total && (
             <TablePagination
               page={(displaying ? displaying.from / 100 : 0) + 1}
               onChange={handleChangePage}
