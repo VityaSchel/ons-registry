@@ -29,6 +29,11 @@ await fastify.register(cors, {
       return
     }
 
+    if (hostname === 'ons.sessionbots.directory') {
+      cb(null, true)
+      return
+    }
+
     cb(new Error('Not allowed'), false)
   }
 })
