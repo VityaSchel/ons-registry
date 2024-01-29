@@ -11,8 +11,8 @@ export function HomepageHero() {
         <div className='pointer-events-none absolute right-[-700px] top-[-200px] bg-gradient-radial w-[1200px] h-[1200px] from-indigo-900 gradien via-transparent to-transparent opacity-10'></div>
       </div>
       <div className='flex flex-col gap-8 justify-center items-center max-w-[800px] w-full'>
-        <h1 className='scroll-m-20 text-6xl font-extrabold tracking-tight md:text-7xl'>{t('title')}</h1>
-        <p className='text-center font text-md md:text-lg'>{t('description')}</p>
+        <h1 className='scroll-m-20 text-6xl font-extrabold tracking-tight md:text-7xl text-left 430:text-center'>{t('title')}</h1>
+        <p className='text-left font text-md md:text-lg 430:text-center'>{t('description')}</p>
       </div>
       <Search />
     </div>

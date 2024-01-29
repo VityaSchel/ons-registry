@@ -257,7 +257,7 @@ export function Search() {
           placeholder={mode === 'names' ? t('search.placeholder') : t('search.search_by_owner')}
           maxLength={mode === 'names' ? 64 : 160}
         />
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-start 370:items-center flex-col 370:flex-row'>
           <div className='flex items-center gap-2 ml-2'>
             <Button
               variant='link'

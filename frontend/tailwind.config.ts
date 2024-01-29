@@ -20,9 +20,11 @@ const config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       screens: {
+        '370': '370px',
         '900': '900px',
         'smwht': '830px',
-        '415': '415px'
+        '415': '415px',
+        '430': '430px',
       },
       colors: {
         border: 'hsl(var(--border))',

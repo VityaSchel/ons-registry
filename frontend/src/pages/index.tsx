@@ -17,7 +17,7 @@ export default function HomePage() {
         <meta name="ogp:sitename" content='ONS Registry' />
       </Head>
       <main
-        className={'flex min-h-screen flex-col items-center justify-between antialiased font-semibold pb-12'}
+        className='flex min-h-screen flex-col items-center justify-between antialiased font-semibold pb-12'
       >
         <HomepageHero />
       </main>
