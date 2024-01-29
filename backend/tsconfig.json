@@ -19,7 +19,6 @@
     "noImplicitAny": false,
     "useUnknownInCatchVariables": false,
     "declaration": true,
-    "baseUrl": ".",
   },
   "include": [
     "src/**/*.ts"
