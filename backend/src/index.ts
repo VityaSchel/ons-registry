@@ -57,28 +57,29 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
     const unhashRecord = await ons.get<OnsMapping[]>('SELECT * FROM hashes WHERE hash = (?)', hashedName)
     if (!unhashRecord) {
       ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
-      ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
-        unhashedName,
-        decryptONSValue(mappings[0].value, unhashedName),
-        hashedName,
-      ])
     }
     reply.send({ 
       ok: true, 
-      mappings: mappings.map(mapping => {
+      mappings: await Promise.all(mappings.map(async mapping => {
         const sessionID = mapping.decrypted_value
+        const decryptedValue = sessionID === null ? decryptONSValue(mapping.value, unhashedName) : mapping.value
+        ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
+          unhashedName,
+          decryptedValue,
+          hashedName,
+        ])
         return {
           name: unhashedName,
           owner: mapping.owner,
           backupOwner: mapping.backup_owner,
-          sessionId: sessionID,
-          ...(sessionID === null && { sessionIdEncrypted: mapping.value }),
+          sessionId: decryptedValue,
+          ...(decryptedValue === null && { sessionIdEncrypted: mapping.value }),
           transactionId: mapping.transaction_id,
           updatedAtBlock: mapping.updated_at_block,
           expiresAtBlock: mapping.expires_at_block,
           action: mapping.action,
         }
-      })
+      }))
     })
   }
 })
