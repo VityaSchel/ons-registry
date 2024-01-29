@@ -19,9 +19,8 @@ async function openConfig() {
   return JSON.parse(await fs.readFile(configPath, 'utf-8')) as { currentBlock: number }
 }
 
-const config = await openConfig()
-
 export async function sync() {
+  const config = await openConfig()
   const blocks = await fetch('http://public-eu.optf.ngo:22023/json_rpc', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -80,7 +79,6 @@ export async function sync() {
     console.log(`Found ${transactions.length} transactions`)
 
     if (transactions.length > 0) {
-
       const transactionsInfo = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

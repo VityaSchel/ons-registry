@@ -288,11 +288,11 @@ export function Search() {
         </div>
       </div>
       <div className='mt-4 h-2 w-full flex gap-5 text-muted-foreground text-sm md:text-base'>
-        {searchQuery && mode === 'by_author' && (<>
-          {total && <span>
+        {Boolean(searchQuery) && mode === 'by_author' && (<>
+          {Boolean(total) && <span>
             {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}
           </span>}
-          {total && total > 0 && <span>
+          {Boolean(total) && total && total > 0 && <span>
             {t('statistics.this_person_money').replace('{totalSum}', String(total * 7 ?? 0))}
             {' '}{i18n.language === 'ru' 
               ? <>(≈{(total * 7 * 60 * 0.8).toFixed(2)}RUB)</>
