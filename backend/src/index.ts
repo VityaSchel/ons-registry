@@ -2,7 +2,6 @@ import Fastify from 'fastify'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 import { decryptONSValue, hash } from './encryption.js'
-import { unhash } from './utils.js'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { OnsMapping } from './schema.js'
@@ -53,10 +52,15 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
     const unhashRecord = await ons.get<OnsMapping[]>('SELECT * FROM hashes WHERE hash = (?)', hashedName)
     if (!unhashRecord) {
       await ons.run('INSERT INTO hashes (hash, string) VALUES (?, ?)', hashedName, unhashedName)
+      await ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
+        unhashedName,
+        decryptONSValue(mappings[0].value, unhashedName),
+        hashedName,
+      ])
     }
     reply.send(
       mappings.map(mapping => {
-        const sessionID = decryptONSValue(mapping.value, unhashedName)
+        const sessionID = mapping.decrypted_value
         return {
           name: unhashedName,
           owner: mapping.owner,
@@ -167,8 +171,8 @@ fastify.get('/list', async (request, reply) => {
 })
 
 const mapOnsRecord = async (mapping: OnsMapping) => {
-  const unhashedName = await unhash(mapping.name_hash)
-  const sessionID = unhashedName ? decryptONSValue(mapping.value, unhashedName) : null
+  const unhashedName = mapping.unhashed_name
+  const sessionID = unhashedName ? mapping.decrypted_value : null
   return {
     name: unhashedName,
     ...(unhashedName === null && { nameHash: mapping.name_hash }),
