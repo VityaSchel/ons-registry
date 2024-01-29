@@ -60,26 +60,31 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
     }
     reply.send({ 
       ok: true, 
-      mappings: await Promise.all(mappings.map(async mapping => {
-        const sessionID = mapping.decrypted_value
-        const decryptedValue = sessionID === null ? decryptONSValue(mapping.value, unhashedName) : mapping.value
-        ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
-          unhashedName,
-          decryptedValue,
-          hashedName,
-        ])
-        return {
-          name: unhashedName,
-          owner: mapping.owner,
-          backupOwner: mapping.backup_owner,
-          sessionId: decryptedValue,
-          ...(decryptedValue === null && { sessionIdEncrypted: mapping.value }),
-          transactionId: mapping.transaction_id,
-          updatedAtBlock: mapping.updated_at_block,
-          expiresAtBlock: mapping.expires_at_block,
-          action: mapping.action,
-        }
-      }))
+      mappings: await Promise.all(
+        mappings
+          .sort((a, b) => b.updated_at_block - a.updated_at_block)
+          .map(async mapping => {
+            const sessionID = mapping.decrypted_value
+            const decryptedValue = sessionID === null 
+              ? decryptONSValue(mapping.value, unhashedName) 
+              : mapping.value
+            ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
+              unhashedName,
+              decryptedValue,
+              hashedName,
+            ])
+            return {
+              name: unhashedName,
+              owner: mapping.owner,
+              backupOwner: mapping.backup_owner,
+              sessionId: decryptedValue,
+              ...(decryptedValue === null && { sessionIdEncrypted: mapping.value }),
+              transactionId: mapping.transaction_id,
+              updatedAtBlock: mapping.updated_at_block,
+              expiresAtBlock: mapping.expires_at_block,
+              action: mapping.action,
+            }
+          }))
     })
   }
 })
