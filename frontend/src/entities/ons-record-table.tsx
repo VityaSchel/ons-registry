@@ -1,7 +1,6 @@
 import { OnsRecord } from '@/shared/model/ons-record'
 import { blockToDate } from '@/shared/utils'
 import { ArrowUpDown } from 'lucide-react'
-import _ from 'lodash'
 import {
   ColumnDef,
   SortingState,
@@ -23,12 +22,12 @@ import { Button } from '@/shared/shadcn/ui/button'
 import { Skeleton } from '@/shared/shadcn/ui/skeleton'
 import { GoQuestion } from 'react-icons/go'
 import { LuKeySquare } from 'react-icons/lu'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/shadcn/ui/tooltip'
 import OxenLogo from '@/assets/oxen-logo.svg'
 import copy from 'copy-to-clipboard'
 import { toast } from 'sonner'
 import { Key } from 'ts-key-enum'
 import { RowDetails } from '@/entities/row-details'
+import { Tooltip } from '@/shared/ui/tooltip'
 
 export function ONSRecordsTable({ data, loading = false, exactResults, onSortChange }: {
   data: OnsRecord[] | null
@@ -51,18 +50,9 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         ) : (
           <span className='text-neutral-600 flex gap-2 items-center'>
             {t('ons_record.name_hashed.label')}
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button onClick={e => e.stopPropagation()}>
-                    <GoQuestion />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className='bg-muted'>
-                  <p className='max-w-80 text-white'>{t('ons_record.name_hashed.hint')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip content={<p className='max-w-80 text-white'>{t('ons_record.name_hashed.hint')}</p>}>
+              <GoQuestion />
+            </Tooltip>
           </span>
         )
       ),
@@ -83,37 +73,35 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
 
         return (
           sessionID ? (
-            <TooltipProvider>
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <button onClick={handleCopy} className='text-ellipsis overflow-hidden max-w-full block'>
-                    {sessionID}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className='bg-muted'>
-                  <p className='max-w-80 text-white'>
-                    {t('copy')}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip delayDuration={200} content={
+              <p className='max-w-80 text-white'>
+                {t('copy')}
+              </p>
+            }>
+              {(props) => (
+                <button 
+                  onClick={handleCopy} 
+                  className='text-ellipsis overflow-hidden max-w-full block' 
+                  {...props}
+                >
+                  {sessionID}
+                </button>
+              )}
+            </Tooltip>
           ) : (
             <span className='text-neutral-600 flex gap-2 items-center'>
               {name ? t('ons_record.value_encrypted.label_legacy_argon2') : t('ons_record.value_encrypted.label_hashed_name')}
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <button onClick={e => e.stopPropagation()}>
-                      <GoQuestion />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className='bg-muted'>
-                    <p className='max-w-80 text-white'>
-                      {name ? t('ons_record.value_encrypted.hint_legacy_argon2') : t('ons_record.value_encrypted.hint_hashed_name')}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip content={
+                <p className='max-w-80 text-white'>
+                  {name ? t('ons_record.value_encrypted.hint_legacy_argon2') : t('ons_record.value_encrypted.hint_hashed_name')}
+                </p>
+              }>
+                {(props) => (
+                  <button onClick={e => e.stopPropagation()} {...props}>
+                    <GoQuestion />
+                  </button>
+                )}
+              </Tooltip>
             </span>
           )
         )
@@ -135,38 +123,32 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
 
         return (
           <div className='flex gap-2 items-center'>
-            <TooltipProvider>
-              <Tooltip delayDuration={300}>
-                <TooltipTrigger asChild>
-                  <button className='w-4 shrink-0' onClick={e => e.stopPropagation()}>
-                    {!isWallet ? (
-                      <LuKeySquare color='#2563eb' />
-                    ) : (
-                      <OxenLogo />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className='bg-muted'>
-                  <p className='max-w-80 text-white'>
-                    {isWallet ? t('ons_record.owner.owner_type_wallet') : t('ons_record.owner.owner_type_keypair')}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <button className='text-ellipsis overflow-hidden max-w-full block' onClick={handleCopy}>
-                    {owner}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className='bg-muted'>
-                  <p className='max-w-80 text-white'>
-                    {t('copy')}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip delayDuration={300} content={
+              <p className='max-w-80 text-white'>
+                {isWallet ? t('ons_record.owner.owner_type_wallet') : t('ons_record.owner.owner_type_keypair')}
+              </p>
+            }>
+              {(props) => (
+                <button className='w-4 shrink-0' onClick={e => e.stopPropagation()} {...props}>
+                  {!isWallet ? (
+                    <LuKeySquare color='#2563eb' />
+                  ) : (
+                    <OxenLogo />
+                  )}
+                </button>
+              )}
+            </Tooltip>
+            <Tooltip delayDuration={200} content={
+              <p className='max-w-80 text-white'>
+                {t('copy')}
+              </p>
+            }>
+              {(props) => (
+                <button className='text-ellipsis overflow-hidden max-w-full block' onClick={handleCopy} {...props}>
+                  {owner}
+                </button>
+              )}
+            </Tooltip>
           </div>
         )
       },

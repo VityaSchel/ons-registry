@@ -24,7 +24,7 @@ await fastify.register(cors, {
     }
     
     const hostname = new URL(origin).hostname
-    if (hostname === 'localhost') {
+    if (hostname === 'localhost' || hostname.startsWith('192.168')) {
       cb(null, true)
       return
     }
@@ -199,7 +199,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   }
 }
 
-fastify.listen({ port: 6801 }, (err, address) => {
+fastify.listen({ port: 6801, host: '192.168.0.120' }, (err, address) => {
   if (err) throw err
   console.log(`Server listening on ${address}`)
 })
