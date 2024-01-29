@@ -6,6 +6,14 @@ import { ThemeProvider } from '@/app/theme-provider'
 import { Toaster } from 'sonner'
 import { Footer } from '@/widgets/footer'
 
+import { Inter } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
 function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider
@@ -15,6 +23,11 @@ function App({ Component, pageProps }: AppProps) {
       disableTransitionOnChange
     >
       <Toaster richColors />
+      <style jsx global>{`
+        :root {
+          --font-sans: ${inter.style.fontFamily};
+        }
+      `}</style>
       <Component {...pageProps} />
       <Footer />
     </ThemeProvider>

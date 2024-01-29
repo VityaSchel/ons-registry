@@ -67,6 +67,30 @@ async function migrateHashedNamesAndEncryptedValues() {
   }
 }
 
+/** Use to generate hashes of all combinations of strings */
+async function enrichRainbowTable() {
+  // To calculate number of combinations:
+  // (BigInt(36)*(BigInt(37)**(BigInt(LENGTH)-BigInt(2)))*BigInt(36)).toLocaleString()
+  // where LENGTH is the MAX length of the string (it also counts all below)
+  // There is 21933699727911487466966075301664254680425194110984302784931456773551261151469297401147661302393383824 combinations of all OXEN names
+  const generateListOfStrings = (length: number) => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz1234567890-'
+    const strings: string[] = []
+    const f = (prefix: string) => {
+      if (prefix.length === length) {
+        strings.push(prefix)
+        return
+      }
+      for (const char of chars) {
+        f(prefix + char)
+      }
+    }
+    f('')
+    return strings
+      .filter(str => !(str.startsWith('-') || str.endsWith('-')))
+  }
+}
+
 if(process.argv[2] === 'migrate') {
   if (!process.argv[3]) {
     console.error('Usage: node out/cli.js migrate <path_to_ons.db>')
