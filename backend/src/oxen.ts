@@ -113,43 +113,45 @@ export async function sync() {
     }
     console.log(`Found ${transactions.length} transactions`)
 
-    const transactionsInfo = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        txs_hashes: transactions,
-        tx_extra: true
+    if (transactions.length > 0) {
+
+      const transactionsInfo = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          txs_hashes: transactions,
+          tx_extra: true
+        })
       })
-    })
-      .then(req => req.json()) as { txs: { extra: object, tx_hash: string, block_height: number }[] }
-    
-    const onsRelatedTransactions = transactionsInfo.txs
-      .filter(tx => 'extra' in tx && 'ons' in tx.extra)
-      .map(tx => {
-        const extra = tx.extra as OnsExtra
-        return {
-          name_hash: Buffer.from(extra.ons.name_hash, 'hex').toString('base64'),
-          owner: extra.ons.owner,
-          backup_owner: extra.ons.backup_owner,
-          type: extra.ons.type,
-          value: extra.ons.value,
-          transaction_id: tx.tx_hash,
-          action: ('buy' in extra.ons 
-            ? 'buy' 
-            : 'update' in extra.ons 
-              ? 'update' 
-              : 'renew') as 'buy' | 'update' | 'renew',
-          updated_at_block: tx.block_height,
-          ...('blocks' in extra && typeof extra.blocks === 'number' && { 
-            expires_at_block: tx.block_height + extra.blocks 
-          }),
-        }
-      })
-    console.log('Filtered', onsRelatedTransactions.length, 'transactions related to ONS')
+        .then(req => req.json()) as { txs: { extra: object, tx_hash: string, block_height: number }[] }
+      
+      const onsRelatedTransactions = transactionsInfo.txs
+        .filter(tx => 'extra' in tx && 'ons' in tx.extra)
+        .map(tx => {
+          const extra = tx.extra as OnsExtra
+          return {
+            name_hash: Buffer.from(extra.ons.name_hash, 'hex').toString('base64'),
+            owner: extra.ons.owner,
+            backup_owner: extra.ons.backup_owner,
+            type: extra.ons.type,
+            value: extra.ons.value,
+            transaction_id: tx.tx_hash,
+            action: ('buy' in extra.ons 
+              ? 'buy' 
+              : 'update' in extra.ons 
+                ? 'update' 
+                : 'renew') as 'buy' | 'update' | 'renew',
+            updated_at_block: tx.block_height,
+            ...('blocks' in extra && typeof extra.blocks === 'number' && { 
+              expires_at_block: tx.block_height + extra.blocks 
+            }),
+          }
+        })
+      console.log('Filtered', onsRelatedTransactions.length, 'transactions related to ONS')
+      await appendOnsRecords(onsRelatedTransactions)
+    }
 
     await fs.writeFile(__dirname + '../db/config.json', JSON.stringify({ currentBlock: latestBlock + 1 }), 'utf-8')
-    
-    await appendOnsRecords(onsRelatedTransactions)
   } else {
     console.log('Up to date!')
   }

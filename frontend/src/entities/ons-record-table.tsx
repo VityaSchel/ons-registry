@@ -266,7 +266,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         <TableBody className='w-full max-w-full'>
           {loading ? (
             [...new Array(3)].map((_, index) => (
-              <TableRow key={index}>
+              <TableRow key={index} onClick={() => console.log(123)}>
                 {columnWidths.map((width, i) => (
                   <TableCell className="text-center" style={{ width }} key={i}>
                     <Skeleton className="w-full h-[20px]"/>

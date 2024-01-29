@@ -17,7 +17,20 @@ const fastify = Fastify({
 })
 
 await fastify.register(cors, {
-  origin: ['http://localhost:8777', 'https://ons.sessionbots.directory']
+  origin: (origin, cb) => {
+    if (!origin) {
+      cb(new Error('Not allowed'), false)
+      return 
+    }
+    
+    const hostname = new URL(origin).hostname
+    if (hostname === 'localhost') {
+      cb(null, true)
+      return
+    }
+
+    cb(new Error('Not allowed'), false)
+  }
 })
 
 const ons = await open({
