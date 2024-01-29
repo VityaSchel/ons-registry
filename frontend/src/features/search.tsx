@@ -60,7 +60,6 @@ export function Search() {
             const exactSearchResults = exactSearch(searchQuery)
             exactSearchResults.promise
               .then(mappings => {
-                console.log('exactSEarch', mappings)
                 setExactResults(mappings)
               })
             Promise.all([searchResults.promise, exactSearchResults.promise])
@@ -246,8 +245,6 @@ export function Search() {
     setDisplaying({ from: (page - 1) * 100, to: Math.min(page * 100, total ?? Number.MAX_SAFE_INTEGER)})
   }
 
-  console.log(displaying, recentOns?.length, recentOns)
-
   return (
     <div className='flex flex-col gap-8 items-center max-w-full'>
       <div className='flex flex-col gap-2 max-w-full relative'>
@@ -334,7 +331,7 @@ export function Search() {
       <div className='mt-6 w-full flex flex-col gap-6 items-center'>
         <ONSRecordsTable
           data={showRecent ? recentOns : searchResults}
-          exactResults={exactResults}
+          exactResults={showRecent ? [] : exactResults}
           loading={showRecent ? recentOns === null : (searchResults === null && exactResults === null)}
           onSortChange={showRecent ? handleSortRecent : handleSortResults}
         />

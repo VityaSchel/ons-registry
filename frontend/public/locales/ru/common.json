@@ -6,7 +6,8 @@
     "no_results": "Ничего не найдено",
     "search_names": "Искать имена",
     "search_by_owner": "Поиск по владельцу",
-    "search_by_owner_type": "Вставьте адрес кошелька OXEN или публичный ключ"
+    "search_by_owner_type": "Вставьте адрес кошелька OXEN или публичный ключ",
+    "exact_result": "Точный результат"
   },
   "ons_record": {
     "name_unhashed": {

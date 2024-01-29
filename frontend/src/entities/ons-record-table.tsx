@@ -45,7 +45,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       size: 100,
       cell: ({ row }) => (
         row.getValue('name') ? (
-          <span className='text-ellipsis overflow-hidden max-w-full block'>
+          <span className='text-ellipsis overflow-hidden max-w-full'>
             {row.getValue('name') as string}
           </span>
         ) : (
@@ -206,10 +206,10 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
   ], [data, exactResults, language, loading, t])
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
-    return [
+    return exactResults ? [
       ...exactResults ?? [], 
       ...(data ?? []).filter(mapping => !exactResults?.some(t => t.transactionId === mapping.transactionId))
-    ]
+    ] : data ?? []
   }, [data, exactResults])
   const table = useReactTable({
     data: tableRows,
@@ -288,29 +288,40 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
             ))
           ) : (
             table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className='w-full max-w-full cursor-pointer'
-                  onClick={() => handleOpenDetails(row.original)}
-                  onKeyDown={e => {
-                    if (e.key === ' ' || e.key === 'Spacebar' || e.key === Key.Enter) { 
-                      e.preventDefault()
-                      handleOpenDetails(row.original)
-                    }
-                  }}
-                  tabIndex={0}
-                >
-                  {row.getVisibleCells().map((cell, i) => (
-                    <TableCell key={cell.id} style={{
-                      width: columnWidths[i],
-                    }}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const isExactMatch = Boolean(row.getValue('name')
+                  && exactResults
+                  && exactResults.some(r => r.name === row.getValue('name')))
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className='w-full max-w-full cursor-pointer'
+                    onClick={() => handleOpenDetails(row.original)}
+                    onKeyDown={e => {
+                      if (e.key === ' ' || e.key === 'Spacebar' || e.key === Key.Enter) { 
+                        e.preventDefault()
+                        handleOpenDetails(row.original)
+                      }
+                    }}
+                    tabIndex={0}
+                  >
+                    {row.getVisibleCells().map((cell, i) => (
+                      <TableCell key={cell.id} style={{
+                        width: columnWidths[i],
+                        ...(isExactMatch && { paddingTop: 40 })
+                      }}>
+                        {isExactMatch && i === 0 && (
+                          <span className='absolute t-0 -mt-8 text-md font-normal text-gray-600 bg-slate-900 px-2 py-1 rounded-md'>
+                            {t('search.exact_result')}
+                          </span>
+                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">

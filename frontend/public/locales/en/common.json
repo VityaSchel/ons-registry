@@ -6,7 +6,8 @@
     "no_results": "No results found",
     "search_names": "Search names",
     "search_by_owner": "Search by owner",
-    "search_by_owner_type": "Paste OXEN wallet address or keypair"
+    "search_by_owner_type": "Paste OXEN wallet address or keypair",
+    "exact_result": "Exact result"
   },
   "ons_record": {
     "name_unhashed": {
