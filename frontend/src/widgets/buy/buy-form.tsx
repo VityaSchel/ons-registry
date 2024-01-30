@@ -10,7 +10,8 @@ export function BuyForm() {
   const { name } = useRouter().query
   const { t } = useTranslation('buy')
   const [nameTaken, setNameTaken] = React.useState(false)
-  const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
+  // const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
+  const [nameCheckAbort, setNameCheckAbort] = React.useState<undefined | (() => void)>()
 
   const price = '500 ₽'
 
@@ -34,10 +35,11 @@ export function BuyForm() {
                   .required(t('errors.name_required')),
                 coupon: Yup.string()
                   .min(6, t('errors.coupon_invalid'))
-                  .max(16, t('errors.coupon_invalid'))
-                  .matches(/^[a-zA-Z0-9]+$/, t('errors.coupon_invalid')),
+                  .max(36, t('errors.coupon_invalid'))
+                  .matches(/^[a-zA-Z0-9_]+$/, t('errors.coupon_invalid')),
                 sessionid: Yup.string()
-                  .matches(/^[a-z0-9]$/, t('errors.sessionid_invalid'))
+                  .length(66, t('errors.sessionid_invalid'))
+                  .matches(/^[a-z0-9]+$/, t('errors.sessionid_invalid'))
                   .required(t('errors.sessionid_required')),
               })
             }
@@ -58,17 +60,22 @@ export function BuyForm() {
               isSubmitting,
               /* and other goodies */
             }) => {
-              const handleCheckName = async (name: string) => {
-                if (new RegExp('^\\w([\\w-]*[\\w])?$', 'g').test(name)) {
-                  const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + name)
-                  if (request.status !== 200 && request.status !== 404) return setNameTaken(false)
-                  const response = await request.json() as { ok: false, error: string } | { ok: true, mappings: object[] }
-                  if (response.ok && response.mappings.length > 0) {
-                    setNameTaken(true)
-                  } else {
-                    setNameTaken(false)
+              const handleCheckName = (name: string) => {
+                const abort = new AbortController()
+                // eslint-disable-next-line no-async-promise-executor
+                new Promise<void>(async () => {
+                  if (new RegExp('^\\w([\\w-]*[\\w])?$', 'g').test(name)) {
+                    const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + name, { signal: abort.signal })
+                    if (request.status !== 200 && request.status !== 404) return setNameTaken(false)
+                    const response = await request.json() as { ok: false, error: string } | { ok: true, mappings: object[] }
+                    if (response.ok && response.mappings.length > 0) {
+                      setNameTaken(true)
+                    } else {
+                      setNameTaken(false)
+                    }
                   }
-                }
+                })
+                return () => abort.abort()
               }
 
               return (
@@ -79,14 +86,12 @@ export function BuyForm() {
                       onChange={e => {
                         handleChange(e)
                         setNameTaken(false)
-                        clearTimeout(nameTakenTimeout)
-                        setNameTakenTimeout(setTimeout(() => {
-                          handleCheckName(e.target.value)
-                        }, 100))
+                        nameCheckAbort?.()
+                        setNameCheckAbort(() => handleCheckName(e.target.value))
                       }}
                       onBlur={e => {
                         handleBlur(e) 
-                        handleCheckName(e.target.value)
+                        setNameCheckAbort(() => handleCheckName(e.target.value))
                       }}
                       value={values.name}
                       placeholder={t('fields.name')}

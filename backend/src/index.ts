@@ -9,11 +9,13 @@ import { onsNameRegex, validOnsName } from './ons-name-regex.js'
 import cors from '@fastify/cors'
 import { z } from 'zod'
 import { sync } from './oxen.js'
+import { PurchasePromoGet } from './purchase/promo.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
 const fastify = Fastify({
-  logger: true
+  logger: true,
+  trustProxy: true
 })
 
 await fastify.register(cors, {
@@ -198,6 +200,9 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
     action: mapping.action,
   }
 }
+
+
+fastify.get('/purchase/promo/:name', PurchasePromoGet)
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err
