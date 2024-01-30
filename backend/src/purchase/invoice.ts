@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto'
 import Decimal from 'decimal.js'
 import { purchases } from './db.js'
 import { sendItem } from './manager.js'
+import { ons } from '../index.js'
 
 export type Invoice = {
   uuid: string
@@ -16,7 +17,7 @@ export type Invoice = {
   currency: 'rub' | 'usd'
   price: string
   created_at: number
-  status: 'created' | 'paid' | 'cancelled'
+  status: 'created' | 'processing' | 'canceled' | 'success' | 'errored'
 }
 
 const rateLimitsCreation = new Map<string, number[]>()
@@ -46,6 +47,13 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     return reply.status(429).send({ ok: false, error: 'RATE_LIMITED', retryAfter: Math.ceil((1000 * 60 * 60 - (Date.now() - rateLimit.slice(-5)[0])) / 1000) })
   }
 
+  if(
+    await ons.get('SELECT name FROM mappings WHERE name = ?', body.data.name) ||
+    await purchases.get('SELECT name FROM invoices WHERE name = ? AND status != "canceled"', body.data.name)
+  ) {
+    return reply.status(409).send({ ok: false, error: 'NAME_OCCUPIED' })
+  }
+
   let price = basePrice
   if(body.data.coupon) {
     const newPrice = await calculatePriceWithCoupon(body.data.coupon)
@@ -60,16 +68,16 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
 
   const invoiceUUID = randomUUID()
   await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', invoiceUUID, body.data.name, body.data.sessionID, body.data.coupon ?? null, body.data.currency, price[body.data.currency], Date.now(), 'created')
+  const redirectUrl = `https://ons.sessionbots.directory/purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {
     await sendItem(invoiceUUID, body.data.name, body.data.sessionID)
     return reply.send({ 
       ok: true, 
-      redirect: `https://ons.sessionbots.directory/purchase-success?name=${body.data.name}&sessionID=${body.data.sessionID}`
+      redirect: redirectUrl
     })
   }
 
-  const redirectUrl = `https://ons.sessionbots.directory/purchase-processing?invoice=${invoiceUUID}`
   const paymentRequest = await fetch('https://api.yookassa.ru/v3/payments', {
     method: 'POST',
     headers: { 

@@ -1,5 +1,4 @@
 import React from 'react'
-import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next'
 import { Formik } from 'formik'
 import * as Yup from 'yup'
@@ -10,6 +9,7 @@ import cx from 'classnames'
 import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 export function BuyForm() {
   const { name } = useRouter().query
@@ -20,6 +20,7 @@ export function BuyForm() {
   const basePrice = { rub: '450', usd: '5' }
   const [price, setPrice] = React.useState(basePrice)
   const [couponNotFound, setCouponNotFound] = React.useState(false)
+  const router = useRouter()
 
   return (
     <div className='mt-12 lg:mt-[10vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
@@ -54,11 +55,37 @@ export function BuyForm() {
                   .required(t('errors.sessionid_required')),
               })
             }
-            onSubmit={(values, { setSubmitting }) => {
-              setTimeout(() => {
-                alert(JSON.stringify(values, null, 2))
-                setSubmitting(false)
-              }, 400)
+            onSubmit={async (values) => {
+              try {
+                const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/purchase/invoice', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    name: values.name,
+                    sessionID: values.sessionid,
+                    ...(values.coupon && { coupon: values.coupon }),
+                    currency: 'rub'
+                  })
+                })
+                if (String(request.status).startsWith('5')) {
+                  toast.error(t('errors.internal_server_error'))
+                  console.error(await request.text())
+                } else {
+                  const response = await request.json() as { ok: true, redirect: string } | { ok: false, error: string }
+                  if (response.ok) {
+                    router.push(response.redirect)
+                  } else {
+                    if(response.error === 'NAME_OCCUPIED') {
+                      toast.error(t('errors.name_occupied'))
+                    } else {
+                      toast.error(response.error)
+                    }
+                  }
+                }
+              } catch(e) {
+                toast.error(t('errors.fetch_failed'))
+                console.error(e)
+              }
             }}
           >
             {({

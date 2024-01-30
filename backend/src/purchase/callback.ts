@@ -1,10 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { onsNameRegex } from '../ons-name-regex.js'
-import { basePrice, calculatePriceWithCoupon } from './promo.js'
-import basicAuth from 'basic-authorization-header'
-import { randomUUID } from 'crypto'
-import Decimal from 'decimal.js'
 import { purchases } from './db.js'
 import ipRangeCheck from 'ip-range-check'
 import { sendItem } from './manager.js'
@@ -20,7 +15,6 @@ const callbackIpRanges = [
   '2a02:5180::/32',
 ]
 
-const rateLimitsCreation = new Map<string, number[]>()
 export async function PurchaseCallback(request: FastifyRequest, reply: FastifyReply) {
   if (!ipRangeCheck(request.ip, callbackIpRanges)) {
     reply.code(403).send({ ok: false, error: 'FORBIDDEN_IP' })
