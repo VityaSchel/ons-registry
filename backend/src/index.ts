@@ -1,3 +1,4 @@
+import './env.js'
 import Fastify from 'fastify'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
@@ -10,6 +11,7 @@ import cors from '@fastify/cors'
 import { z } from 'zod'
 import { sync } from './oxen.js'
 import { PurchasePromoGet } from './purchase/promo.js'
+import { PurchaseCreateInvoice } from './purchase/invoice.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -203,6 +205,8 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
 
 
 fastify.get('/purchase/promo/:name', PurchasePromoGet)
+fastify.post('/purchase/invoice', PurchaseCreateInvoice)
+fastify.post('/purchase/callback', () => null)
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err

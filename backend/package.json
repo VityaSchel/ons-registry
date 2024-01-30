@@ -13,8 +13,10 @@
   "dependencies": {
     "@fastify/cors": "^9.0.0",
     "argon2": "^0.31.2",
+    "basic-authorization-header": "^0.2.7",
     "blake2": "^5.0.0",
     "decimal.js": "^10.4.3",
+    "dotenv": "^16.4.1",
     "fastify": "^4.25.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

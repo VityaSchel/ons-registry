@@ -1,16 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
-import sqlite3 from 'sqlite3'
-import { open } from 'sqlite'
 import Decimal from 'decimal.js'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
-
-const purchases = await open({
-  filename: __dirname + '../../db/purchases.db',
-  driver: sqlite3.Database
-})
+import { purchases } from './db.js'
 
 type Coupon = {
   name: string
@@ -26,7 +16,7 @@ type Coupon = {
 const rateLimits = new Map<string, number[]>()
 export async function PurchasePromoGet(request: FastifyRequest<{ Params: { name: string } }>, reply: FastifyReply) {
   const requestsByIp = rateLimits.get(request.ip) ?? []
-  if (requestsByIp.length && requestsByIp.length >= 10 && (Date.now() - requestsByIp.slice(-10)[0]) < 1000 * 60 * 60) {
+  if (requestsByIp.length && requestsByIp.length >= 40 && (Date.now() - requestsByIp.slice(-10)[0]) < 1000 * 60 * 60) {
     reply.code(429).send({ ok: false, error: 'RATE_LIMITED', retryAfter: Math.ceil((1000 * 60 * 60 - (Date.now() - requestsByIp.slice(-10)[0])) / 1000) })
     return
   } else {
@@ -41,12 +31,12 @@ export async function PurchasePromoGet(request: FastifyRequest<{ Params: { name:
   }
 }
 
-async function calculatePriceWithCoupon(code: string): Promise<{ rub: Decimal, usd: Decimal } | null>{
-  const basePrice = {
-    rub: 450,
-    usd: 5
-  }
+export const basePrice = {
+  rub: '450.00',
+  usd: '5.00'
+}
 
+export async function calculatePriceWithCoupon(code: string): Promise<{ rub: Decimal, usd: Decimal } | null>{
   const result = await purchases.get<Coupon>('SELECT * FROM coupons WHERE name = (?) AND left > 0', code)
   if (result && (result.expires_at ? result.expires_at >= Date.now() : true) && result.left > 0) {
     if(result.discount_percent && result.discount_percent <= 1) {

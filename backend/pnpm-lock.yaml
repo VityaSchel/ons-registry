@@ -11,12 +11,18 @@ dependencies:
   argon2:
     specifier: ^0.31.2
     version: 0.31.2
+  basic-authorization-header:
+    specifier: ^0.2.7
+    version: 0.2.7
   blake2:
     specifier: ^5.0.0
     version: 5.0.0
   decimal.js:
     specifier: ^10.4.3
     version: 10.4.3
+  dotenv:
+    specifier: ^16.4.1
+    version: 16.4.1
   fastify:
     specifier: ^4.25.2
     version: 4.25.2
@@ -773,6 +779,16 @@ packages:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
     dev: false
 
+  /basic-auth-token@0.4.2:
+    resolution: {integrity: sha512-83xWdZGpzPNjB8zrsvNEEvpLxjeaQFrzKJxxa5eFFNWHTJmvb8o9zAbs5j8Fdk0xlyLloCuNLFvMbQU63GvreA==}
+    dev: false
+
+  /basic-authorization-header@0.2.7:
+    resolution: {integrity: sha512-ULWccPPIijGiKcT0l7i9lo7q97DNmGVQ3MmFTa6GSfMI8NaDf+lUjI9wCVffaR7Nzt52QgtVgpPwVWMph8rAfw==}
+    dependencies:
+      basic-auth-token: 0.4.2
+    dev: false
+
   /bin-check@4.1.0:
     resolution: {integrity: sha512-b6weQyEUKsDGFlACWSIOfveEnImkJyK/FGW6FAG42loyoquvjdtOIqO6yBFzHyqyVVhNgNkQxxx09SFLK28YnA==}
     engines: {node: '>=4'}
@@ -1051,6 +1067,11 @@ packages:
     dependencies:
       esutils: 2.0.3
     dev: true
+
+  /dotenv@16.4.1:
+    resolution: {integrity: sha512-CjA3y+Dr3FyFDOAMnxZEGtnW9KBR2M0JvvUtXNW+dYJL5ROWxP9DUHCwgFqpMk0OXCc0ljhaNTr2w/kutYIcHQ==}
+    engines: {node: '>=12'}
+    dev: false
 
   /emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
