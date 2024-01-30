@@ -54,14 +54,6 @@
     "this_person_money": "Total cost of them is {totalSum} OXEN"
   },
   "copy": "Copy",
-  "footer": {
-    "donate": "Donate",
-    "links": "Check other cool projects",
-    "made_by": "Proudly made in two sleepless nights by",
-    "author": "Viktor Shchelochkov",
-    "for": "for OXEN community",
-    "telegram": "Telegram channel"
-  },
   "details": {
     "hashed_name": "Hashed name",
     "name_hash": "Name hash",

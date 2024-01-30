@@ -1,0 +1,32 @@
+{
+  "heading": "Buy Session username",
+  "errors": {
+    "coupon_invalid": "Invalid coupon",
+    "name_required": "Required",
+    "name_too_long": "Name cannot be longer than 64 characters",
+    "sessionid_invalid": "Invalid Session ID. It looks like this: 057aeb66e45660c3bdfb7c62706f6440226af43ec13f3b6f899c1dd4db1b8fce5b",
+    "sessionid_required": "Required",
+    "name_taken": "Unfortunately, this name is already taken"
+  },
+  "fields": {
+    "name": "Future username",
+    "coupon": "Coupon (optional)",
+    "sessionid": "Session ID (66 characters)"
+  },
+  "submit": {
+    "with_yookassa": "Pay with YooKassa"
+  },
+  "final_price": "Final price",
+  "faq": {
+    "about_ons": {
+      "title": "Information about this product"
+    },
+    "purchase": {
+      "title": "Refund policy"
+    },
+    "contacts": {
+      "title": "Contacts and info",
+      "description": "For any questions, write to Telegram: t.me/hlothdev or to e-mail: onspurchase@hloth.dev"
+    }
+  }
+}

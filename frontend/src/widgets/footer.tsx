@@ -4,7 +4,7 @@ import Link from 'next/link'
 import TeleramLogo from '@/assets/telegram.svg'
 
 export function Footer() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('footer')
 
   return (
     <footer className='bg-indigo-950 bg-opacity-30 px-4 md:px-10 py-12 flex justify-center relative overflow-clip'>
