@@ -13,7 +13,7 @@ import { useRouter } from 'next/router'
 
 export function BuyForm() {
   const { name } = useRouter().query
-  const { t } = useTranslation('buy')
+  const { t, i18n } = useTranslation('buy')
   const [nameTaken, setNameTaken] = React.useState(false)
   // const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
   const [nameCheckAbort, setNameCheckAbort] = React.useState<undefined | (() => void)>()
@@ -67,7 +67,8 @@ export function BuyForm() {
                     sessionID: values.sessionid,
                     ...(values.coupon && { coupon: values.coupon }),
                     currency: 'rub',
-                    email: values.email
+                    email: values.email,
+                    language: i18n.language === 'ru' ? 'ru' : 'en'
                   })
                 })
                 if (String(request.status).startsWith('5')) {
