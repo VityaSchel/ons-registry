@@ -22,7 +22,7 @@ export function BuyForm() {
   const [couponNotFound, setCouponNotFound] = React.useState(false)
 
   return (
-    <div className='mt-12 lg:mt-[17vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
+    <div className='mt-12 lg:mt-[10vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
       <div className='top-0 absolute w-screen h-[200vh] max-h-screen overflow-hidden pointer-events-none'>
         <div className='pointer-events-none absolute top-[-500px] left-[-500px] bg-gradient-radial w-[1200px] h-[1200px] from-indigo-900 gradien via-transparent to-transparent opacity-20'></div>
         <div className='pointer-events-none absolute right-[-700px] top-[-200px] bg-gradient-radial w-[1200px] h-[1200px] from-indigo-900 gradien via-transparent to-transparent opacity-10'></div>
@@ -164,7 +164,7 @@ export function BuyForm() {
             }}
           </Formik>
         </div>
-        <div className='flex flex-col gap-2 flex-1'>
+        <div className='flex flex-col gap-2 flex-1 mt-12'>
           <Faq title={t('faq.about_ons.title')} content={t('faq.about_ons.description')} />
           <Faq title={t('faq.purchase.title')} content={t('faq.purchase.description')} />
           <Faq title={t('faq.contacts.title')} content={t('faq.contacts.description')} />

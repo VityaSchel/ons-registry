@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { sync } from './oxen.js'
 import { PurchasePromoGet } from './purchase/promo.js'
 import { PurchaseCreateInvoice } from './purchase/invoice.js'
+import { PurchaseCallback } from './purchase/callback.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -206,7 +207,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
 
 fastify.get('/purchase/promo/:name', PurchasePromoGet)
 fastify.post('/purchase/invoice', PurchaseCreateInvoice)
-fastify.post('/purchase/callback', () => null)
+fastify.post('/purchase/callback', PurchaseCallback)
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err

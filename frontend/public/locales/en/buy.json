@@ -26,7 +26,7 @@
     },
     "purchase": {
       "title": "Refund policy",
-      "description": "Refunds are only possible if you have not received the digital product, for example, due to a technical error on our part, and the name has not been registered in the blockchain. Due to the nature of the blockchain, your name may not be registered immediately after payment, but within 5-10 minutes. Refunds are possible within 14 days of purchase if the name has not been linked. If you paid with YooKassa: we will cancel your payment and the funds will be returned to your payment method within 30 days."
+      "description": "Refunds are only possible if you have not received the digital product, for example, due to a technical error on our part, and the name has not been registered in the blockchain. Due to the nature of the blockchain, your name may not be registered immediately after payment, but within 5-10 minutes. Refunds are possible within 14 days of purchase if the name has not been linked. Money won't be refunded if you're misspelled name or Session ID in corresponding fields. If you paid with YooKassa: we will cancel your payment and the funds will be returned to your payment method within 30 days."
     },
     "contacts": {
       "title": "Contacts and info",
