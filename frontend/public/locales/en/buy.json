@@ -11,12 +11,15 @@
     "name_taken": "Unfortunately, this name is already taken",
     "fetch_failed": "Failed to connect to the server. Please check your internet connection",
     "internal_server_error": "Internal server error",
-    "name_occupied": "Unfortunately, this name is already sold"
+    "name_occupied": "Unfortunately, this name is already sold",
+    "email_invalid": "Invalid email"
   },
   "fields": {
     "name": "Future username",
     "coupon": "Coupon (optional)",
-    "sessionid": "Session ID (66 characters)"
+    "sessionid": "Session ID (66 characters)",
+    "email": "Email (optional)",
+    "email_hint": "If you specify your email, we'll send you a text file with seed phrase for OXEN wallet that owns your record. If you don't know what it is, you can leave this field empty"
   },
   "submit": {
     "with_yookassa": "Pay with YooKassa"

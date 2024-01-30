@@ -38,7 +38,7 @@ export function BuyForm() {
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
           <Formik
-            initialValues={{ name: name ? Array.isArray(name) ? name[0] : name : '', coupon: '', sessionid: '' }}
+            initialValues={{ name: name ? Array.isArray(name) ? name[0] : name : '', coupon: '', sessionid: '', email: '' }}
             validationSchema={
               Yup.object({
                 name: Yup.string()
@@ -53,6 +53,8 @@ export function BuyForm() {
                   .length(66, t('errors.sessionid_invalid'))
                   .matches(/^[a-z0-9]+$/, t('errors.sessionid_invalid'))
                   .required(t('errors.sessionid_required')),
+                email: Yup.string()
+                  .email(t('errors.email_invalid'))
               })
             }
             onSubmit={async (values) => {
@@ -64,7 +66,8 @@ export function BuyForm() {
                     name: values.name,
                     sessionID: values.sessionid,
                     ...(values.coupon && { coupon: values.coupon }),
-                    currency: 'rub'
+                    currency: 'rub',
+                    email: values.email
                   })
                 })
                 if (String(request.status).startsWith('5')) {
@@ -162,6 +165,17 @@ export function BuyForm() {
                       placeholder={t('fields.sessionid')}
                     />
                     {errors.sessionid && touched.sessionid && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.sessionid}</span>}
+                  </div>
+                  <div className='flex flex-col gap-1 w-full'>
+                    <Input
+                      name="email"
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      value={values.email}
+                      placeholder={t('fields.email')}
+                    />
+                    <span className='text-neutral-600 text-sm ml-2 mb-1'>{t('fields.email_hint')}</span>
+                    {errors.email && touched.email && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.email}</span>}
                   </div>
                   <div className='flex flex-col gap-1 w-full'>
                     <Input

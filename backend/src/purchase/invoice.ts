@@ -18,6 +18,7 @@ export type Invoice = {
   price: string
   created_at: number
   status: 'created' | 'processing' | 'canceled' | 'success' | 'errored'
+  email?: string
 }
 
 const rateLimitsCreation = new Map<string, number[]>()
@@ -36,7 +37,10 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
       .min(1)
       .max(100)
       .optional(),
-    currency: z.enum(['rub', 'usd'])
+    currency: z.enum(['rub', 'usd']),
+    email: z.string()
+      .email()
+      .optional()
   }).safeParseAsync(request.body)
   if (!body.success) {
     return reply.status(400).send({ ok: false, error: 'INVALID_BODY' })
@@ -67,11 +71,11 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   }
 
   const invoiceUUID = randomUUID()
-  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', invoiceUUID, body.data.name, body.data.sessionID, body.data.coupon ?? null, body.data.currency, price[body.data.currency], Date.now(), 'created')
+  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', invoiceUUID, body.data.name, body.data.sessionID, body.data.coupon ?? null, body.data.currency, price[body.data.currency], Date.now(), 'created', body.data.email)
   const redirectUrl = `https://ons.sessionbots.directory/purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {
-    await sendItem(invoiceUUID, body.data.name, body.data.sessionID)
+    await sendItem(invoiceUUID, body.data.name, body.data.sessionID, body.data.email)
     return reply.send({ 
       ok: true, 
       redirect: redirectUrl

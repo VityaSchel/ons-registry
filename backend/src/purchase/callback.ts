@@ -44,7 +44,7 @@ export async function PurchaseCallback(request: FastifyRequest, reply: FastifyRe
     if (!invoice || invoice.status !== 'created') {
       return
     }
-    sendItem(invoiceUUID, invoice.name, invoice.session_id)
+    sendItem(invoiceUUID, invoice.name, invoice.session_id, invoice.email)
   } else if (body.data.event === 'payment.canceled') {
     const invoiceUUID = body.data.object.metadata.invoiceUUID
     const invoice = await purchases.get<Invoice>('SELECT * FROM invoices WHERE uuid = ?', invoiceUUID)
