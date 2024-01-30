@@ -5,6 +5,9 @@ import { Formik } from 'formik'
 import * as Yup from 'yup'
 import { Input } from '@/shared/shadcn/ui/input'
 import { Button } from '@/shared/shadcn/ui/button'
+import { Key } from 'ts-key-enum'
+import cx from 'classnames'
+import { toast } from 'sonner'
 
 export function BuyForm() {
   const { name } = useRouter().query
@@ -12,8 +15,9 @@ export function BuyForm() {
   const [nameTaken, setNameTaken] = React.useState(false)
   // const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
   const [nameCheckAbort, setNameCheckAbort] = React.useState<undefined | (() => void)>()
-
-  const price = '500 ₽'
+  const basePrice = { rub: '450', usd: '5' }
+  const [price, setPrice] = React.useState(basePrice)
+  const [couponNotFound, setCouponNotFound] = React.useState(false)
 
   return (
     <div className='mt-12 lg:mt-[17vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
@@ -21,7 +25,7 @@ export function BuyForm() {
         <div className='pointer-events-none absolute top-[-500px] left-[-500px] bg-gradient-radial w-[1200px] h-[1200px] from-indigo-900 gradien via-transparent to-transparent opacity-20'></div>
         <div className='pointer-events-none absolute right-[-700px] top-[-200px] bg-gradient-radial w-[1200px] h-[1200px] from-indigo-900 gradien via-transparent to-transparent opacity-10'></div>
       </div>
-      <div className='flex gap-32 justify-between max-w-full w-[1200px]'>
+      <div className='flex gap-16 xl:gap-32 flex-col lg:flex-row justify-between max-w-full w-[1200px]'>
         <div className='flex flex-col gap-8 max-w-[600px] w-full'>
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
@@ -78,6 +82,23 @@ export function BuyForm() {
                 return () => abort.abort()
               }
 
+              const handleCheckCoupon = async (coupon: string) => {
+                setCouponNotFound(false)
+                if (coupon === '') return setPrice(basePrice)
+                const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/purchase/promo/' + coupon)
+                const response = await request.json() as { ok: false, error: string } | { ok: true, price: { usd: string, rub: string } }
+                if (response.ok) {
+                  setPrice(response.price)
+                } else {
+                  if(response.error === 'NOT_FOUND') {
+                    setCouponNotFound(true)
+                  } else {
+                    toast.error(response.error)
+                  }
+                  setPrice(basePrice)
+                }
+              }
+
               return (
                 <form onSubmit={handleSubmit} className='flex flex-col gap-2 w-auto items-start'>
                   <div className='flex flex-col gap-1 w-full'>
@@ -112,14 +133,23 @@ export function BuyForm() {
                     <Input
                       name="coupon"
                       onChange={handleChange}
-                      onBlur={handleBlur}
                       value={values.coupon}
                       placeholder={t('fields.coupon')}
+                      onKeyDown={e => {
+                        if(e.key === Key.Enter) {
+                          handleCheckCoupon(values.coupon.trim())
+                        }
+                      }}
+                      onBlur={e => {
+                        handleBlur(e)
+                        handleCheckCoupon(e.target.value.trim())
+                      }}
+                      className={cx('transition-all', { 'border-red-600': couponNotFound })}
                     />
                     {errors.coupon && touched.coupon && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.coupon}</span>}
                   </div>
-                  <span className='text-2xl my-2'>{t('final_price')}: <span  className='font-bold'>{price}</span></span>
-                  <Button type="submit" disabled={isSubmitting || nameTaken || Object.values(errors).filter(Boolean).length > 0}>
+                  <span className='text-2xl my-2'>{t('final_price')}: <span  className='font-bold'>{price.rub + ' ₽'}</span></span>
+                  <Button type="submit" disabled={isSubmitting || nameTaken || !values.sessionid || !values.name || Object.values(errors).filter(Boolean).length > 0}>
                     {t('submit.with_yookassa')}
                   </Button>
                 </form>
