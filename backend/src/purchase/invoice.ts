@@ -53,9 +53,11 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     return reply.status(429).send({ ok: false, error: 'RATE_LIMITED', retryAfter: Math.ceil((1000 * 60 * 60 - (Date.now() - rateLimit.slice(-5)[0])) / 1000) })
   }
 
+  const name = body.data.name.toLowerCase()
+
   if(
-    await ons.get('SELECT name FROM mappings WHERE name = ?', body.data.name) ||
-    await purchases.get('SELECT name FROM invoices WHERE name = ? AND status != "canceled"', body.data.name)
+    await ons.get('SELECT name FROM mappings WHERE name = ?', name) ||
+    await purchases.get('SELECT name FROM invoices WHERE name = ? AND status != "canceled"', name)
   ) {
     return reply.status(409).send({ ok: false, error: 'NAME_OCCUPIED' })
   }
@@ -75,7 +77,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   const invoiceUUID = randomUUID()
   await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     invoiceUUID, 
-    body.data.name, 
+    name, 
     body.data.sessionID, 
     body.data.coupon ?? null, 
     body.data.currency, 
@@ -88,7 +90,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   const redirectUrl = `https://ons.sessionbots.directory/purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {
-    await sendItem(invoiceUUID, body.data.name, body.data.sessionID, body.data.language, body.data.email)
+    await sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, body.data.email)
     return reply.send({ 
       ok: true, 
       redirect: redirectUrl
@@ -107,7 +109,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
         value: price[body.data.currency],
         currency: body.data.currency.toUpperCase()
       },
-      description: `Покупка никнейма ${body.data.name}`,
+      description: `Покупка никнейма ${name}`,
       capture: true,
       confirmation: {
         type: 'redirect',
