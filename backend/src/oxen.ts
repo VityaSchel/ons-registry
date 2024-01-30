@@ -2,10 +2,12 @@ import fs from 'fs/promises'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { ons } from './index.js'
-import { BlockHeader, OnsExtra } from './model.js'
+import { BlockHeader, OnsExtra, OnsRecord } from './model.js'
 import { appendOnsRecords } from './db.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
+
+const dryRun = false
 
 async function openConfig() {
   const configPath = __dirname + '../db/config.json'
@@ -89,7 +91,7 @@ export async function sync() {
       })
         .then(req => req.json()) as { txs: { extra: object, tx_hash: string, block_height: number }[] }
       
-      const onsRelatedTransactions = transactionsInfo.txs
+      const onsRelatedTransactions: OnsRecord[] = transactionsInfo.txs
         .filter(tx => 'extra' in tx && 'ons' in tx.extra)
         .map(tx => {
           const extra = tx.extra as OnsExtra
@@ -109,10 +111,15 @@ export async function sync() {
             ...('blocks' in extra && typeof extra.blocks === 'number' && { 
               expires_at_block: tx.block_height + extra.blocks 
             }),
+            payment_id: extra.payment_id
           }
         })
       console.log('Filtered', onsRelatedTransactions.length, 'transactions related to ONS')
-      await appendOnsRecords(ons, onsRelatedTransactions)
+      if(dryRun) {
+        console.log(onsRelatedTransactions)
+      } else {
+        await appendOnsRecords(ons, onsRelatedTransactions)
+      }
     }
 
     await fs.writeFile(__dirname + '../db/config.json', JSON.stringify({ currentBlock: latestBlock + 1 }), 'utf-8')

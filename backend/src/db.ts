@@ -5,6 +5,13 @@ import { unhash } from './utils.js'
 export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
   console.log('Appending', onsRecord.length, 'ONS records')
   for (const record of onsRecord) {
+    if (record.payment_id) {
+      const exists = await checkIfExists(ons, record.name_hash, record.payment_id)
+      if (exists) {
+        console.log('Skipping', record.name_hash, 'because it is duplicate')
+        continue
+      }
+    }
     const unhashedName = await unhash(record.name_hash, ons)
     const decryptedValue = unhashedName === null ? null : decryptONSValue(record.value, unhashedName)
     await ons.run(
@@ -23,4 +30,11 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
     )
   }
   console.log('Finished adding', onsRecord.length, 'ONS records')
+}
+
+async function checkIfExists(ons: Db, nameHash: string, paymentId: string) {
+  return await ons.run('SELECT * FROM mappings WHERE name_hash = ? AND payment_id = ?', [
+    nameHash,
+    paymentId
+  ])
 }

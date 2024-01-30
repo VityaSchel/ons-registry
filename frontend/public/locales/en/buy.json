@@ -1,9 +1,11 @@
 {
+  "title": "Buy Session username — ONS Registry",
+  "description": "On this page you can buy a nickname in Session (ONS) for rubles or cryptocurrency.",
   "heading": "Buy Session username",
   "errors": {
     "coupon_invalid": "Invalid coupon",
-    "name_required": "Required",
     "name_too_long": "Name cannot be longer than 64 characters",
+    "name_required": "Required",
     "sessionid_invalid": "Invalid Session ID. It looks like this: 057aeb66e45660c3bdfb7c62706f6440226af43ec13f3b6f899c1dd4db1b8fce5b",
     "sessionid_required": "Required",
     "name_taken": "Unfortunately, this name is already taken"
@@ -19,14 +21,17 @@
   "final_price": "Final price",
   "faq": {
     "about_ons": {
-      "title": "Information about this product"
+      "title": "Information about this product",
+      "description": "You are buying the digital product \"Mapping Oxen Name System in the OXEN blockchain\". After purchase, the name you have chosen is automatically linked to the account you have chosen in the Session messenger, after which you and other users will be able to find you by this name (ONS). You also get a secret phrase (\"mnemonic\") to access the wallet with the OXEN cryptocurrency, for which the corresponding entry was created in the blockchain in the form of a text file, which will be sent to you by e-mail (\"mnemonic\" consists of 24-25 English words in Latin). If you wish, you can download the application to access the wallet yourself and manage the purchased entry, for example, transfer it to another Session account. You can view all transactions in the OXEN blockchain here: oxen.observer, and see all existing names in Session on the main page of this site."
     },
     "purchase": {
-      "title": "Refund policy"
+      "title": "Refund policy",
+      "description": "Refunds are only possible if you have not received the digital product, for example, due to a technical error on our part, and the name has not been registered in the blockchain. Due to the nature of the blockchain, your name may not be registered immediately after payment, but within 5-10 minutes. Refunds are possible within 14 days of purchase if the name has not been linked. If you paid with YooKassa: we will cancel your payment and the funds will be returned to your payment method within 30 days."
     },
     "contacts": {
       "title": "Contacts and info",
-      "description": "For any questions, write to Telegram: t.me/hlothdev or to e-mail: onspurchase@hloth.dev"
+      "description": "For any questions, write to Telegram: t.me/hlothdev or to e-mail: onspurchase@hloth.dev. Sales are made by an individual, TIN: 631625069194"
     }
-  }
+  },
+  "go_back": "Go back to home page"
 }

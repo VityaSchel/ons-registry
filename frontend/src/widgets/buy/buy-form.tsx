@@ -8,6 +8,8 @@ import { Button } from '@/shared/shadcn/ui/button'
 import { Key } from 'ts-key-enum'
 import cx from 'classnames'
 import { toast } from 'sonner'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export function BuyForm() {
   const { name } = useRouter().query
@@ -27,6 +29,11 @@ export function BuyForm() {
       </div>
       <div className='flex gap-16 xl:gap-32 flex-col lg:flex-row justify-between max-w-full w-[1200px]'>
         <div className='flex flex-col gap-8 max-w-[600px] w-full'>
+          <Link href='/' className='self-start'>
+            <Button variant={'ghost'} className='-ml-4 flex items-center' tabIndex={-1}>
+              <ArrowLeft size={16} className='mr-2' /> {t('go_back')}
+            </Button>
+          </Link>
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
           <Formik
