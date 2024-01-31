@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { SortingState } from '@tanstack/react-table'
 import { Pagination as TablePagination } from '@/entities/table-pagination'
 import { Input } from '@/features/input'
+import { BuyNamesButton } from '@/features/buy-names-button'
 
 export function Search() {
   const { t, i18n } = useTranslation('common')
@@ -256,6 +257,16 @@ export function Search() {
           onChange={setSearchQuery}
           placeholder={mode === 'names' ? t('search.placeholder') : t('search.search_by_owner')}
           maxLength={mode === 'names' ? 64 : 160}
+        />
+        <BuyNamesButton
+          loading={loading}
+          state={(mode !== 'names' || showRecent) 
+            ? 'default'
+            : exactResults === null
+              ? 'free'
+              : 'taken'
+          }
+          name={searchQuery}
         />
         <div className='flex justify-between items-start 370:items-center flex-col 370:flex-row'>
           <div className='flex items-center gap-2 ml-2'>

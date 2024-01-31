@@ -88,7 +88,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
         if (data.toString().includes('Starting wallet RPC server')) resolve()
       })
     })
-    console.error(`==[ ${name} ]==: Connecting to wallet via RPC`)
+    console.log(`==[ ${name} ]==: Connecting to wallet via RPC`)
 
     const mnemonicRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
       method: 'POST',

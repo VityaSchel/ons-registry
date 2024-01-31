@@ -40,7 +40,7 @@ export function Input({ mode, placeholder, onChange, maxLength }: {
 
   return (
     <>
-      <span className='absolute left-4 top-2 430:left-8 430:top-6 transition-opacity duration-150 pointer-events-none text-ellipsis overflow-hidden max-w-full line-clamp-1 break-all font-open-sans' style={{
+      <span className='absolute left-4 top-2 430:left-8 430:top-6 transition-opacity duration-150 pointer-events-none text-ellipsis overflow-hidden max-w-full line-clamp-1 break-all font-open-sans z-[3]' style={{
         width: 'calc(100% - 4rem)',
         opacity: mode === 'by_author' ? 1 : 0,
         color: value.length === 0 
@@ -65,12 +65,12 @@ export function Input({ mode, placeholder, onChange, maxLength }: {
           </span>
         )}
       </span>
-      <span className={cx(`absolute mt-0.5 ml-0.5 left-4 top-3 430:left-8 430:top-6 text-2xl 430:text-4xl ${openSans.className} overflow-hidden max-w-full break-all text-clip h-10 transition-opacity`, {
+      <span className={cx(`absolute mt-0.5 ml-0.5 left-4 top-3 430:left-8 430:top-6 text-2xl 430:text-4xl ${openSans.className} overflow-hidden max-w-full break-all text-clip h-10 transition-opacity z-[3]`, {
         'opacity-0 pointer-events-none': !easterEggAvailable
       })}><span className='pointer-events-none opacity-0'>{value}</span> <button onClick={() => setIsEasterEggVisible(true)} tabIndex={easterEggAvailable ? 0 : -1}>❤️</button></span>
       <input
         type="text"
-        className={cx(`py-3 px-4 430:py-6 430:px-8 text-2xl 430:text-4xl rounded-lg shadow-lg shadow-slate-950/50 dark:shadow-slate-500/15 outline-none bg-neutral-800 placeholder:text-neutral-600 max-w-full w-[800px] border-2 border-transparent transition-all duration-75 h-16 430:h-[92px] ${openSans.className}`, {
+        className={cx(`py-3 px-4 430:py-6 430:px-8 text-2xl 430:text-4xl rounded-lg shadow-lg dark:shadow-slate-950/15 outline-none bg-neutral-800 placeholder:text-neutral-600 max-w-full w-[800px] border-2 border-transparent transition-all duration-75 h-16 430:h-[92px] ${openSans.className} z-[1]`, {
           '!border-red-500': value && !isValidQuery,
           'text-sm 430:text-sm pt-6 430:pt-6 pb-0 430:pb-0': mode === 'by_author'
         })}
