@@ -160,7 +160,6 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   }
 
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-  await purchases.run('UPDATE invoices SET status = "error" WHERE uuid = ?', invoiceUUID)
 }
 
 
@@ -169,7 +168,7 @@ if(!TOKEN) throw new Error('MAILTRAP_API_KEY not set')
 const ENDPOINT = 'https://send.api.mailtrap.io/'
 const client = new MailtrapClient({ endpoint: ENDPOINT, token: TOKEN })
 
-function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
+async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
   const sender = {
     email: 'mailtrap@ons.sessionbots.directory',
     name: 'ONS Registry',
@@ -177,7 +176,7 @@ function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'r
 
   try {
     if(language === 'ru') {
-      client.send({
+      await client.send({
         from: sender,
         to: [{ email }],
         subject: 'Спасибо за покупку ONS имени в Session',
@@ -185,7 +184,7 @@ function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'r
         category: 'Purchase completed',
       })
     } else {
-      client.send({
+      await client.send({
         from: sender,
         to: [{ email }],
         subject: 'Thank you for purchasing ONS name in Session',

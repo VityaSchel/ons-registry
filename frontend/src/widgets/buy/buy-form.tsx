@@ -13,7 +13,7 @@ import { useRouter } from 'next/router'
 
 export function BuyForm() {
   const { name } = useRouter().query
-  let nameString = name ? Array.isArray(name) ? name[0] : name : ''
+  const nameString = name ? Array.isArray(name) ? name[0] : name : ''
   const { t, i18n } = useTranslation('buy')
   const [nameTaken, setNameTaken] = React.useState(false)
   // const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
