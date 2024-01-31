@@ -144,7 +144,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
         console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
       }
     }
-    walletCli.kill('SIGINT')
+    setTimeout(() => walletCli.kill('SIGINT'), 1000 * 30)
   } catch(e) {
     console.error(`==[ ${name} ]==: Error while running oxen-wallet:`, e.message)
     await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)  

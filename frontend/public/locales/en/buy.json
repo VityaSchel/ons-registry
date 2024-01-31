@@ -42,7 +42,7 @@
   "go_back": "Go back to home page",
   "payment_processing": {
     "title": "Processing...",
-    "description": "We are checking status of your payment. You can close this page, your name will be mapped automatically in background"
+    "description": "We are checking status of your payment. If you payed the invoice, you can close this page, your name will be mapped automatically in background"
   },
   "payment_canceled": {
     "title": "Payment canceled",

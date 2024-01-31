@@ -71,14 +71,14 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
           .sort((a, b) => b.updated_at_block - a.updated_at_block)
           .map(async mapping => {
             const sessionID = mapping.decrypted_value
-            const decryptedValue = sessionID === null 
-              ? decryptONSValue(mapping.value, unhashedName) 
-              : mapping.value
-            ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
-              unhashedName,
-              decryptedValue,
-              hashedName,
-            ])
+            const decryptedValue = sessionID === null && decryptONSValue(mapping.value, unhashedName) 
+            if (decryptedValue) {
+              ons.run('UPDATE mappings SET unhashed_name = ?, decrypted_value = ? WHERE name_hash = ?;', [
+                unhashedName,
+                decryptedValue,
+                hashedName,
+              ])
+            }
             return {
               name: unhashedName,
               owner: mapping.owner,
