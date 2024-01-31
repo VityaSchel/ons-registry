@@ -8,7 +8,7 @@ export function getServerSideProps(context: GetServerSidePropsContext<{ name: st
   return {
     props: {},
     redirect: {
-      destination: '/buy?' + context.params?.name,
+      destination: '/buy?name=' + context.params?.name,
       permanent: false,
     }
   }

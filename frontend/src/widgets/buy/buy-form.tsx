@@ -13,6 +13,7 @@ import { useRouter } from 'next/router'
 
 export function BuyForm() {
   const { name } = useRouter().query
+  let nameString = name ? Array.isArray(name) ? name[0] : name : ''
   const { t, i18n } = useTranslation('buy')
   const [nameTaken, setNameTaken] = React.useState(false)
   // const [nameTakenTimeout, setNameTakenTimeout] = React.useState<NodeJS.Timeout | undefined>()
@@ -41,8 +42,10 @@ export function BuyForm() {
   }
 
   React.useEffect(() => {
-    handleCheckName(name as string)
-  }, [name])
+    if (nameString) {
+      handleCheckName(nameString)
+    }
+  }, [nameString])
 
   return (
     <div className='mt-12 lg:mt-[10vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
@@ -60,7 +63,7 @@ export function BuyForm() {
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
           <Formik
-            initialValues={{ name: name ? Array.isArray(name) ? name[0] : name : '', coupon: '', sessionid: '', email: '' }}
+            initialValues={{ name: nameString, coupon: '', sessionid: '', email: '' }}
             validationSchema={
               Yup.object({
                 name: Yup.string()
