@@ -24,8 +24,8 @@ export function RowDetails({ record, onClose }: {
     expiresAtBlock: 0,
     action: null,
     sessionIdEncrypted: '',
-    owner: '',
-    backupOwner: '',
+    owner: { keypair: '', oxen: '' },
+    backupOwner: { keypair: null, oxen: null },
     sessionId: null,
     nameHash: '',
     name: null,
@@ -42,7 +42,7 @@ export function RowDetails({ record, onClose }: {
         <DialogHeader>
           <DialogTitle>{recordMemo.name ?? <span className='text-muted'>{t('details.hashed_name')}</span>}</DialogTitle>
         </DialogHeader>
-        <DialogDescription>
+        <DialogDescription className='overflow-auto max-h-[80vh]'>
           <table className='border-spacing-y-3 border-separate [&>tbody>tr>td]:border-t [&>tbody>tr>td]:pt-3 [&>tbody>tr>td]:align-top'>
             <tbody>
               {recordMemo.nameHash && (
@@ -62,9 +62,30 @@ export function RowDetails({ record, onClose }: {
                 <CopiableTd>{recordMemo.transactionId}</CopiableTd>
               </tr>
               <tr>
-                <td className='pr-4'>{t('details.backup_owner')}</td>
-                {recordMemo.backupOwner
-                  ? <CopiableTd>{recordMemo.backupOwner}</CopiableTd>
+                <td className='pr-4'>{t('details.owner_oxen')}</td>
+                {recordMemo.owner.oxen
+                  ? <CopiableTd>{recordMemo.owner.oxen}</CopiableTd>
+                  : <td><span className='text-muted'>{t('details.empty')}</span></td>
+                }
+              </tr>
+              <tr>
+                <td className='pr-4'>{t('details.owner_keypair')}</td>
+                {recordMemo.owner.keypair
+                  ? <CopiableTd>{recordMemo.owner.keypair}</CopiableTd>
+                  : <td><span className='text-muted'>{t('details.empty')}</span></td>
+                }
+              </tr>
+              <tr>
+                <td className='pr-4'>{t('details.backup_owner_oxen')}</td>
+                {recordMemo.backupOwner.oxen
+                  ? <CopiableTd>{recordMemo.backupOwner.oxen}</CopiableTd>
+                  : <td><span className='text-muted'>{t('details.empty')}</span></td>
+                }
+              </tr>
+              <tr>
+                <td className='pr-4'>{t('details.backup_owner_keypair')}</td>
+                {recordMemo.backupOwner.keypair
+                  ? <CopiableTd>{recordMemo.backupOwner.keypair}</CopiableTd>
                   : <td><span className='text-muted'>{t('details.empty')}</span></td>
                 }
               </tr>

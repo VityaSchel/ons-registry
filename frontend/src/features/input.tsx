@@ -43,26 +43,26 @@ export function Input({ mode, placeholder, onChange, maxLength }: {
       <span className='absolute left-4 top-2 430:left-8 430:top-6 transition-opacity duration-150 pointer-events-none text-ellipsis overflow-hidden max-w-full line-clamp-1 break-all font-open-sans z-[3]' style={{
         width: 'calc(100% - 4rem)',
         opacity: mode === 'by_author' ? 1 : 0,
-        color: value.length === 0 
-          ? '#aaaaaa' 
+        color: value.length === 95
+          ? '#5cc4ba'
           : value.length === 160
             ? '#2563eb'
-            : '#5cc4ba'
+            : '#aaaaaa'
       }}>
-        {value.length === 0 ? (
-          <span>{t('search.search_by_owner_type')}</span>
-        ) : value.length === 160 ? (
+        {value.length === 160 ? (
           <span className='flex items-center'>
             <LuKeySquare color='#2563eb' className='mr-2' />
             ED25519 keypair
           </span>
-        ) : (
+        ) : value.length === 95 ? (
           <span className='flex items-center'>
             <span className='block w-fit h-5 bg-[#5cc4ba] p-1 rounded-sm mr-2'>
               <OxenLogoFull className='h-full' />
             </span>
             Wallet
           </span>
+        ) : (
+          <span>{ t('search.search_by_owner_type') }</span>
         )}
       </span>
       <span className={cx(`absolute mt-0.5 ml-0.5 left-4 top-3 430:left-8 430:top-6 text-2xl 430:text-4xl ${openSans.className} overflow-hidden max-w-full break-all text-clip h-10 transition-opacity z-[3]`, {

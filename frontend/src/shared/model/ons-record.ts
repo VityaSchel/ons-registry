@@ -4,8 +4,8 @@ export type OnsRecord = {
   expiresAtBlock: number;
   action: 'create' | 'update' | 'delete' | null;
   sessionIdEncrypted?: string | undefined;
-  owner: string;
-  backupOwner: string;
+  owner: { oxen: string, keypair: string }
+  backupOwner: { oxen: string | null, keypair: string | null };
   sessionId: string | null;
   nameHash?: string | undefined;
   name: string | null;

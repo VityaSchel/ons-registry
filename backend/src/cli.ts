@@ -6,6 +6,8 @@ import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { unhash } from './utils.js'
 import { decryptONSValue } from './encryption.js'
+import { OnsMapping } from './schema.js'
+import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 const pathToOnsDb = __dirname + '../db/ons.db'
@@ -21,7 +23,7 @@ async function migrateOnsDb(pathToOldDb: string) {
   for (const row of rows) {
     const owner = await oldOnsDB.get('SELECT address FROM owner WHERE id = (?)', row.owner_id) as { address: Buffer }
     let backupOwner: { address: Buffer } | undefined
-    if (row.backup_owner) {
+    if (row.backup_owner_id) {
       backupOwner = await oldOnsDB.get('SELECT address FROM owner WHERE id = (?)', row.backup_owner) as { address: Buffer }
     }
     const onsRecord = {
@@ -95,17 +97,125 @@ async function decryptValue(value: string, name: string) {
   console.log('Decrypted value:', decryptONSValue(value, name))
 }
 
-if(process.argv[2] === 'migrate') {
-  if (!process.argv[3]) {
-    console.error('Usage: node out/cli.js migrate <path_to_ons.db>')
-    process.exit(1)
+async function addOxenWalletsAndKeypairs() {
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings')
+  for(let i = 0; i < rows.length; i++) {
+    console.log(i+'/'+rows.length, Math.round(i / rows.length * 100) + '%')
+    const row = rows[i]
+    if(row.owner.length === 160) {
+      const oxen = keypairToOxen(0x72, row.owner)
+      await ons.run('UPDATE mappings SET owner_oxen = ? WHERE owner = ?', oxen, row.owner)
+    } else if(row.owner.length === 95) {
+      const keypair = oxenToKeypair(row.owner)
+      await ons.run('UPDATE mappings SET owner = ?, owner_oxen = ? WHERE owner = ?', keypair, row.owner, row.owner)
+    } else {
+      throw new Error(row.owner)
+    }
+    if (row.backup_owner) {
+      if(row.backup_owner.length === 160) {
+        const oxen = keypairToOxen(0x72, row.owner)
+        await ons.run('UPDATE mappings SET backup_owner_oxen = ? WHERE backup_owner = ?', oxen, row.backup_owner)
+      } else if(row.owner.length === 95) {
+        const keypair = oxenToKeypair(row.owner)
+        await ons.run('UPDATE mappings SET backup_owner = ?, backup_owner_oxen = ? WHERE backup_owner = ?', keypair, row.backup_owner, row.backup_owner)
+      } else {
+        throw new Error(row.backup_owner)
+      }
+    }
   }
-  await migrateOnsDb(process.argv[3])
-} else if(process.argv[2] === 'add_cleartext') {
-  await migrateHashedNamesAndEncryptedValues()
-} else if (process.argv[2] === 'decrypt_value') {
-  await decryptValue(process.argv[3], process.argv[4])
-} else {
-  console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>')
-  process.exit(1)
+}
+
+async function checkOxenWalletsAndKeypairs() {
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings')
+  for(let i = 0; i < rows.length; i++) {
+    console.log(i+'/'+rows.length, Math.round(i / rows.length * 100) + '%')
+    const row = rows[i]
+    if(row.owner.length === 160) {
+      const oxen = keypairToOxen(0x72, row.owner)
+      if(row.owner_oxen !== oxen) {
+        throw new Error('Owner mismatch')
+      }
+    } else if(row.owner.length === 95) {
+      const keypair = oxenToKeypair(row.owner)
+      if(row.owner !== keypair) {
+        throw new Error('Owner mismatch')
+      }
+    } else {
+      throw new Error(row.owner)
+    }
+    if (row.backup_owner) {
+      if(row.backup_owner.length === 160) {
+        const oxen = keypairToOxen(0x72, row.owner)
+        if(row.backup_owner_oxen !== oxen) {
+          throw new Error('Backup owner mismatch')
+        }
+      } else if(row.owner.length === 95) {
+        const keypair = oxenToKeypair(row.owner)
+        if(row.backup_owner !== keypair) {
+          throw new Error('Backup owner mismatch')
+        }
+      } else {
+        throw new Error(row.backup_owner)
+      }
+    }
+  }
+
+}
+
+async function fixBackupOwner(onsDbPath: string) {
+  const onsSrc = await open({
+    filename: onsDbPath,
+    driver: sqlite3.Database
+  })
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const rows = await onsSrc.all('SELECT * FROM mappings')
+  for(let i = 0; i < rows.length; i++) {
+    console.log(i+'/'+rows.length, Math.round(i / rows.length * 100) + '%')
+    const row = rows[i]
+    if(row.backup_owner_id) {
+      const backupOwnerRow = await onsSrc.get('SELECT address FROM owner WHERE id = (?)', row.backup_owner_id)
+      const backupOwner = backupOwnerRow.address.toString('hex')
+      const owners = generateOwners(backupOwner)
+      await ons.run('UPDATE mappings SET backup_owner = ?, backup_owner_oxen = ? WHERE name_hash = ?', owners.keypair, owners.oxen, row.name_hash)
+    }
+  }
+}
+
+switch(process.argv[2]) {
+  case 'migrate':
+    if (!process.argv[3]) {
+      console.error('Usage: node out/cli.js migrate <path_to_ons.db>')
+      process.exit(1)
+    }
+    await migrateOnsDb(process.argv[3])
+    break
+  case 'add_cleartext':
+    await migrateHashedNamesAndEncryptedValues()
+    break
+  case 'decrypt_value':
+    await decryptValue(process.argv[3], process.argv[4])
+    break
+  case 'add_wallets_and_keypairs':
+    await addOxenWalletsAndKeypairs()
+    break
+  case 'check_wallets_and_keypairs':
+    await checkOxenWalletsAndKeypairs()
+    break
+  case 'fix_backup_owner':
+    await fixBackupOwner(process.argv[3])
+    break
+  default:
+    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db>')
+    process.exit(1)
 }

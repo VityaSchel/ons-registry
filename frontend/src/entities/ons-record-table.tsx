@@ -1,6 +1,8 @@
 import { OnsRecord } from '@/shared/model/ons-record'
 import { blockToDate } from '@/shared/utils'
 import { ArrowUpDown } from 'lucide-react'
+import { LuKeySquare } from 'react-icons/lu'
+import OxenLogo from '@/assets/oxen-logo.svg'
 import {
   ColumnDef,
   SortingState,
@@ -17,17 +19,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/shadcn/ui/table'
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/shared/shadcn/ui/tabs'
 import React from 'react'
 import { Button } from '@/shared/shadcn/ui/button'
 import { Skeleton } from '@/shared/shadcn/ui/skeleton'
 import { GoQuestion } from 'react-icons/go'
-import { LuKeySquare } from 'react-icons/lu'
-import OxenLogo from '@/assets/oxen-logo.svg'
 import copy from 'copy-to-clipboard'
 import { toast } from 'sonner'
 import { Key } from 'ts-key-enum'
 import { RowDetails } from '@/entities/row-details'
 import { Tooltip } from '@/shared/ui/tooltip'
+import { OnsRecordOwner } from '@/entities/ons-record-owner'
 
 export function ONSRecordsTable({ data, loading = false, exactResults, onSortChange }: {
   data: OnsRecord[] | null
@@ -37,6 +43,8 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
 }) {
   const { t, i18n } = useTranslation('common')
   const language = i18n.language
+  const [ownerDisplay, setOwnerDisplay] = React.useState<'keypair' | 'oxen'>('oxen')
+
   const columns: ColumnDef<OnsRecord>[] = React.useMemo(() => [
     {
       accessorKey: 'name',
@@ -110,46 +118,33 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
     },
     {
       accessorKey: 'owner',
-      header: t('ons_record.owner.label'),
+      header: () => (
+        <div className='flex justify-between items-center w-full'>
+          <span>{t('ons_record.value.label')}</span>
+          <Tabs
+            value={ownerDisplay}
+            onValueChange={value => setOwnerDisplay(value as 'keypair' | 'oxen')}
+            className='h-auto'
+          >
+            <TabsList className='h-auto'>
+              <TabsTrigger value='keypair'>
+                <LuKeySquare size={12} />
+              </TabsTrigger>
+              <TabsTrigger value='oxen'>
+                <OxenLogo size={12} className='w-3 h-3' />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      ),
       cell: ({ row }) => {
-        const owner = row.getValue('owner') as string
-        const isWallet = owner.length !== 160
-
-        const handleCopy = (e: React.MouseEvent<HTMLButtonElement>) => {
-          e.stopPropagation()
-          copy(owner)
-          toast.success(t('ons_record.owner.copied'))
-        }
+        const owner = row.getValue('owner') as { keypair: string, oxen: string }
 
         return (
-          <div className='flex gap-2 items-center'>
-            <Tooltip delayDuration={300} content={
-              <p className='max-w-80 text-white'>
-                {isWallet ? t('ons_record.owner.owner_type_wallet') : t('ons_record.owner.owner_type_keypair')}
-              </p>
-            }>
-              {(props) => (
-                <button className='w-4 shrink-0' onClick={e => e.stopPropagation()} {...props}>
-                  {!isWallet ? (
-                    <LuKeySquare color='#2563eb' />
-                  ) : (
-                    <OxenLogo />
-                  )}
-                </button>
-              )}
-            </Tooltip>
-            <Tooltip delayDuration={200} content={
-              <p className='max-w-80 text-white'>
-                {t('copy')}
-              </p>
-            }>
-              {(props) => (
-                <button className='text-ellipsis overflow-hidden max-w-full block' onClick={handleCopy} {...props}>
-                  {owner}
-                </button>
-              )}
-            </Tooltip>
-          </div>
+          <OnsRecordOwner 
+            owner={owner} 
+            ownerDisplay={ownerDisplay} 
+          />
         )
       },
       size: 100,
@@ -185,7 +180,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       },
       size: 100,
     }
-  ], [data, exactResults, language, loading, t])
+  ], [language, t, ownerDisplay])
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
     return exactResults ? [
@@ -206,7 +201,6 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
 
       setSorting(sort)
     },
-    // getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
     state: {
       sorting,
@@ -214,18 +208,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
     getRowId: (row) => row.transactionId,
   })
 
-  // const [matches, setMatches] = React.useState(
-  //   window.matchMedia('(min-width: 768px)').matches
-  // )
-
-  // React.useEffect(() => {
-  //   window
-  //     .matchMedia('(min-width: 768px)')
-  //     .addEventListener('change', e => setMatches(e.matches))
-  // }, [])
-
   const columnWidths = ['33%', '67%', '33%', '200px']
-  // const columnFlexes = ['1', '2', '1', '1']
 
   const [detailsOpen, setDetailsOpen] = React.useState<OnsRecord | false>(false)
   const handleOpenDetails = (record: OnsRecord) => {

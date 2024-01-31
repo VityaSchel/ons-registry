@@ -81,8 +81,14 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
             }
             return {
               name: unhashedName,
-              owner: mapping.owner,
-              backupOwner: mapping.backup_owner,
+              owner: {
+                keypair: mapping.owner,
+                oxen: mapping.owner_oxen,
+              },
+              backupOwner: {
+                keypair: mapping.backup_owner,
+                oxen: mapping.backup_owner_oxen
+              },
               sessionId: sessionID,
               ...(decryptedValue === null && { sessionIdEncrypted: mapping.value }),
               transactionId: mapping.transaction_id,
@@ -125,6 +131,8 @@ fastify.get('/list', async (request, reply) => {
       'DESC',
     ]).optional(),
     owner: z.string()
+      .min(1)
+      .max(160)
       .optional(),
     offset: z.coerce.number()
       .int()
@@ -148,7 +156,11 @@ fastify.get('/list', async (request, reply) => {
     ${query.data.query ? 'AND hashes.string LIKE :query' : ''}
     ${query.data.min_block ? 'AND mappings.updated_at_block >= :minBlock' : ''}
     ${query.data.max_block ? 'AND mappings.updated_at_block <= :maxBlock' : ''}
-    ${query.data.owner ? 'AND mappings.owner = :owner' : ''}
+    ${query.data.owner 
+    ? query.data.owner.length === 160
+      ? 'AND (mappings.owner = :owner OR mappings.backup_owner = :owner)'
+      : 'AND (mappings.owner_oxen = :owner OR mappings.backup_owner_oxen = :owner)'
+    : ''}
   `
   const filtersVariables = {
     ...(query.data.query && { ':query': `%${query.data.query}%` }),
@@ -194,8 +206,14 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   return {
     name: unhashedName,
     ...(unhashedName === null && { nameHash: mapping.name_hash }),
-    owner: mapping.owner,
-    backupOwner: mapping.backup_owner,
+    owner: {
+      keypair: mapping.owner,
+      oxen: mapping.owner_oxen,
+    },
+    backupOwner: {
+      keypair: mapping.backup_owner,
+      oxen: mapping.backup_owner_oxen
+    },
     sessionId: unhashedName ? sessionID : null,
     ...(sessionID === null && { sessionIdEncrypted: mapping.value }),
     transactionId: mapping.transaction_id,

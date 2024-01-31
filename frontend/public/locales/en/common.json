@@ -59,7 +59,10 @@
     "name_hash": "Name hash",
     "encrypted_value": "Encrypted value",
     "transaction_id": "Transaction ID",
-    "backup_owner": "Backup owner",
+    "owner_oxen": "Owner",
+    "owner_keypair": "Owner (ed25519 keypair)",
+    "backup_owner_oxen": "Backup owner",
+    "backup_owner_keypair": "Backup owner (ed25519 keypair)",
     "empty": "Empty",
     "update_block_height": "Update block height",
     "expiration_block_height": "Expiration block height"

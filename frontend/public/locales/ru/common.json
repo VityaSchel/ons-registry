@@ -59,7 +59,10 @@
     "name_hash": "Хеш имени",
     "encrypted_value": "Зашифрованное значение",
     "transaction_id": "ID транзакции",
-    "backup_owner": "Резервный владелец",
+    "owner_oxen": "Владелец",
+    "owner_keypair": "Владелец (ключ ed25519)",
+    "backup_owner_oxen": "Резервный владелец",
+    "backup_owner_keypair": "Резервный владелец (ключ ed25519)",
     "empty": "Пусто",
     "update_block_height": "Обновлено в блоке с высотой",
     "expiration_block_height": "Истекает в блоке с высотой"

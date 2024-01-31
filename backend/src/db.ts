@@ -1,5 +1,6 @@
 import { decryptONSValue } from './encryption.js'
 import { Db, OnsRecord } from './model.js'
+import { generateOwners } from './monero-base58.js'
 import { unhash } from './utils.js'
 
 export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
@@ -14,12 +15,16 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
     }
     const unhashedName = await unhash(record.name_hash, ons)
     const decryptedValue = unhashedName === null ? null : decryptONSValue(record.value, unhashedName)
+    const owners = generateOwners(record.owner)
+    const backupOwners = generateOwners(record.backup_owner)
     await ons.run(
-      'INSERT INTO mappings (name_hash, unhashed_name, owner, backup_owner, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       record.name_hash,
       unhashedName,
-      record.owner,
-      record.backup_owner,
+      owners.keypair,
+      owners.oxen,
+      backupOwners.keypair,
+      backupOwners.oxen,
       record.type,
       record.value,
       decryptedValue,
