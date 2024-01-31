@@ -28,7 +28,7 @@ async function sendNotificationToAdmin(text: string) {
   })
 }
 
-export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', email?: string) {
+export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', email?: string, dryRun = false) {
   await purchases.run('UPDATE invoices SET status = "processing" WHERE uuid = ?', invoiceUUID)  
 
   const walletDir = __dirname + '../../.oxen/'
@@ -43,11 +43,13 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}), wallets left: ${wallets.length} | invId: ${invoiceUUID}`)
   }
   let wallet = path.basename(_.sample(wallets) as string).slice(0, -'.keys'.length)
-  await Promise.all([
-    fs.rename(walletDir + wallet, walletDir + 'used_' + wallet),
-    fs.rename(walletDir + wallet + '.keys', walletDir + 'used_' + wallet + '.keys')
-  ])
-  wallet = 'used_' + wallet
+  if (!dryRun) {
+    await Promise.all([
+      fs.rename(walletDir + wallet, walletDir + 'used_' + wallet),
+      fs.rename(walletDir + wallet + '.keys', walletDir + 'used_' + wallet + '.keys')
+    ])
+    wallet = 'used_' + wallet
+  }
 
 
   const ports = new Array(99).fill(null).map((_, i) => i + 6900)
@@ -110,39 +112,43 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
       throw new Error('No mnemonic in response')
     }
 
-    const buyRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': basicAuth('onsregistry', 'onsregistry')
-      },
-      body: JSON.stringify({ 
-        'jsonrpc': '2.0', 
-        'id': 0, 
-        'method': 'ons_buy_mapping', 
-        'params': { 
-          'name': name,
-          'type': 'session',
-          'value': sessionID,
-          'priority': 0, 
-          'get_tx_hex': true 
-        } 
+    if (!dryRun) {
+      const buyRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth('onsregistry', 'onsregistry')
+        },
+        body: JSON.stringify({ 
+          'jsonrpc': '2.0', 
+          'id': 0, 
+          'method': 'ons_buy_mapping', 
+          'params': { 
+            'name': name,
+            'type': 'session',
+            'value': sessionID,
+            'priority': 0, 
+            'get_tx_hex': true 
+          } 
+        })
       })
-    })
-    const buyResponse = await parseJSONResponse<{ error: { code: number, message: string } } | { result: object }>(buyRequest)
-    if ('error' in buyResponse) {
-      console.error(`==[ ${name} ]==: Error while buying item:`, buyResponse.error.message)
-      await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)
-      await sendNotificationToAdmin(`⚠️ PURCHASE FAILED (${buyResponse.error.message}): ${name} (${sessionID}) invId: ${invoiceUUID}`)  
-      return
-    } else {
-      console.log(`==[ ${name} ]==: Successfully bought mapping:`, buyResponse.result)
-      await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-      if (email) {
-        sendEmailWithSeedPhrase(email, mnemonic, language)
-      } else {
-        console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
+      const buyResponse = await parseJSONResponse<{ error: { code: number, message: string } } | { result: object }>(buyRequest)
+      if ('error' in buyResponse) {
+        console.error(`==[ ${name} ]==: Error while buying item:`, buyResponse.error.message)
+        await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)
+        await sendNotificationToAdmin(`⚠️ PURCHASE FAILED (${buyResponse.error.message}): ${name} (${sessionID}) invId: ${invoiceUUID}`)  
+        return
       }
+      console.log(`==[ ${name} ]==: Successfully bought mapping:`, buyResponse.result)
+    } else {
+      console.log(`==[ ${name} ]==: Successfully bought mapping (dry run)`)
+    }
+    
+    await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
+    if (email) {
+      sendEmailWithSeedPhrase(email, mnemonic, language)
+    } else {
+      console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
     }
     setTimeout(() => walletCli.kill('SIGINT'), 1000 * 30)
   } catch(e) {

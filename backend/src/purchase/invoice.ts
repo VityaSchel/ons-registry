@@ -95,7 +95,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   }/${body.data.language === 'ru' ? 'ru/' : ''}purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {
-    await sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, body.data.email)
+    await sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, body.data.email, true)
     return reply.send({ 
       ok: true, 
       redirect: redirectUrl

@@ -210,6 +210,7 @@ fastify.get('/purchase/promo/:name', PurchasePromoGet)
 fastify.post('/purchase/invoice', PurchaseCreateInvoice)
 fastify.post('/purchase/callback', PurchaseCallback)
 fastify.get('/purchase/status', PurchaseStatus)
+fastify.get('/ip8721379812783', (request, reply) => reply.send(request.ip))
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err

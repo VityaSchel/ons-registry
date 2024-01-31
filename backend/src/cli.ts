@@ -91,6 +91,10 @@ async function enrichRainbowTable() {
   }
 }
 
+async function decryptValue(value: string, name: string) {
+  console.log('Decrypted value:', decryptONSValue(value, name))
+}
+
 if(process.argv[2] === 'migrate') {
   if (!process.argv[3]) {
     console.error('Usage: node out/cli.js migrate <path_to_ons.db>')
@@ -99,7 +103,9 @@ if(process.argv[2] === 'migrate') {
   await migrateOnsDb(process.argv[3])
 } else if(process.argv[2] === 'add_cleartext') {
   await migrateHashedNamesAndEncryptedValues()
+} else if (process.argv[2] === 'decrypt_value') {
+  await decryptValue(process.argv[3], process.argv[4])
 } else {
-  console.error('Usage: node out/cli.js migrate <path_to_ons.db> | node out/cli.js add_cleartext')
+  console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>')
   process.exit(1)
 }
