@@ -8,6 +8,7 @@ import Decimal from 'decimal.js'
 import { purchases } from './db.js'
 import { sendItem } from './manager.js'
 import { ons } from '../index.js'
+import { hash } from '../encryption.js'
 
 export type Invoice = {
   uuid: string
@@ -56,8 +57,8 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   const name = body.data.name.toLowerCase()
 
   if(
-    await ons.get('SELECT name FROM mappings WHERE name = ?', name) ||
-    await purchases.get('SELECT name FROM invoices WHERE name = ? AND status != "canceled"', name)
+    await ons.get('SELECT name_hash FROM mappings WHERE name_hash = ?', await hash(name)) ||
+    await purchases.get('SELECT name FROM invoices WHERE name = ? AND status NOT IN ("canceled", "errored")', name)
   ) {
     return reply.status(409).send({ ok: false, error: 'NAME_OCCUPIED' })
   }
@@ -70,7 +71,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
         rub: newPrice.rub.toFixed(2),
         usd: newPrice.usd.toFixed(2)
       }
-      await purchases.run('UPDATE coupons SET uses = ISNULL(uses, 0) + 1, left = left - 1 WHERE name = ? AND left > 0', body.data.coupon)
+      await purchases.run('UPDATE coupons SET uses = IFNULL(uses, 0) + 1, left = left - 1 WHERE name = ? AND left > 0', body.data.coupon)
     }
   }
 
@@ -87,7 +88,11 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     body.data.email ?? null, 
     body.data.language
   ])
-  const redirectUrl = `https://ons.sessionbots.directory/purchase-processing?invoice=${invoiceUUID}`
+  const redirectUrl = `${
+    process.env.YOOKASSA_API_TOKEN.startsWith('test')
+      ? 'http://localhost:6802'
+      : 'https://ons.sessionbots.directory'
+  }/${body.data.language === 'ru' ? 'ru/' : ''}purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {
     await sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, body.data.email)

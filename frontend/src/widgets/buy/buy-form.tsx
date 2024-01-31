@@ -67,7 +67,7 @@ export function BuyForm() {
                     sessionID: values.sessionid,
                     ...(values.coupon && { coupon: values.coupon }),
                     currency: 'rub',
-                    email: values.email,
+                    ...(values.email && { email: values.email }),
                     language: i18n.language === 'ru' ? 'ru' : 'en'
                   })
                 })

@@ -7,6 +7,8 @@ import fs from 'fs/promises'
 import _ from 'lodash'
 import tcpPortUsed from 'tcp-port-used'
 import { MailtrapClient } from 'mailtrap'
+import path from 'path'
+import basicAuth from 'basic-authorization-header'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -29,8 +31,8 @@ async function sendNotificationToAdmin(text: string) {
 export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', email?: string) {
   await purchases.run('UPDATE invoices SET status = "processing" WHERE uuid = ?', invoiceUUID)  
 
-  const walletDir = __dirname + '../.oxen/'
-  const wallets = await glob(walletDir + 'wallet-*')
+  const walletDir = __dirname + '../../.oxen/'
+  const wallets = await glob(walletDir + 'wallet-*.keys')
   
   if (wallets.length === 0) {
     console.log(`==[ ${name} ]==: No oxen wallets available`)
@@ -40,13 +42,18 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   } else {
     sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}), wallets left: ${wallets.length} | invId: ${invoiceUUID}`)
   }
-  const wallet = _.sample(wallets)  
-  await fs.rename(walletDir + wallet, walletDir + 'used_' + wallet)
+  let wallet = path.basename(_.sample(wallets) as string).slice(0, -'.keys'.length)
+  await Promise.all([
+    fs.rename(walletDir + wallet, walletDir + 'used_' + wallet),
+    fs.rename(walletDir + wallet + '.keys', walletDir + 'used_' + wallet + '.keys')
+  ])
+  wallet = 'used_' + wallet
+
 
   const ports = new Array(99).fill(null).map((_, i) => i + 6900)
   let walletPort: number | undefined
   for(const port of ports) {
-    if (await tcpPortUsed.check(port)) {
+    if (!await tcpPortUsed.check(port)) {
       walletPort = port
       break
     }
@@ -62,7 +69,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   console.log(`==[ ${name} ]==: Spawning oxen wallet`, wallet, 'on port', walletPort)
   
   try {
-    const walletCli = spawn(__dirname + '../oxen/oxen-wallet-rpc', [
+    const walletCli = spawn(__dirname + '../../oxen/oxen-wallet-rpc', [
       '--daemon-address', 'public-eu.optf.ngo:22023',
       '--wallet-file', walletDir + wallet,
       '--password', 'onsregistry',
@@ -71,13 +78,21 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
       '--rpc-login', 'onsregistry:onsregistry'
     ])
     walletCli.stderr.on('data', (data) => {
-      console.error('==[ ${name} ]==: oxen wallet stderr:', data.toString())
+      console.error(`==[ ${name} ]==: oxen wallet stderr:`, data.toString())
     })
+    await new Promise<void>(resolve => {
+      walletCli.stdout.on('data', (data) => {
+        console.log(`==[ ${name} ]==: oxen wallet stdout:`, data.toString())
+        if (data.toString().includes('Starting wallet RPC server')) resolve()
+      })
+    })
+    console.error(`==[ ${name} ]==: Connecting to wallet via RPC`)
 
     const mnemonicRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': basicAuth('onsregistry', 'onsregistry')
       },
       body: JSON.stringify({ 
         'jsonrpc': '2.0', 
@@ -88,16 +103,18 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
         } 
       })
     })
-    const mnemonicResponse = await mnemonicRequest.json() as { result: { key: string } }
+    const mnemonicResponse = await parseJSONResponse<{ result: { key: string } }>(mnemonicRequest)
     const mnemonic = mnemonicResponse.result.key
     if(!mnemonic) {
+      walletCli.kill('SIGINT')
       throw new Error('No mnemonic in response')
     }
 
     const buyRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': basicAuth('onsregistry', 'onsregistry')
       },
       body: JSON.stringify({ 
         'jsonrpc': '2.0', 
@@ -112,7 +129,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
         } 
       })
     })
-    const buyResponse = await buyRequest.json() as { error: { code: number, message: string } } | { result: object }
+    const buyResponse = await parseJSONResponse<{ error: { code: number, message: string } } | { result: object }>(buyRequest)
     if ('error' in buyResponse) {
       console.error(`==[ ${name} ]==: Error while buying item:`, buyResponse.error.message)
       await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)
@@ -127,8 +144,9 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
         console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
       }
     }
+    walletCli.kill('SIGINT')
   } catch(e) {
-    console.error(`==[ ${name} ]==: Error while running oxen-wallet:`)
+    console.error(`==[ ${name} ]==: Error while running oxen-wallet:`, e.message)
     await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)  
     await sendNotificationToAdmin(`⚠️ PURCHASE FAILED (${e.message}): ${name} (${sessionID}) invId: ${invoiceUUID}`)
     return
@@ -166,5 +184,14 @@ function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'r
       text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!',
       category: 'Purchase completed',
     })
+  }
+}
+
+const parseJSONResponse = async <T>(response: Response): Promise<T> => {
+  const text = await response.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error(`Failed to parse JSON response: ${text}`)
   }
 }
