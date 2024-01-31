@@ -67,7 +67,7 @@
   "copied": "Copied",
   "buy_button": {
     "default": "Get any Session username in 30 seconds for $5",
-    "free": "This nickname is available! Register it in 30 seconds",
-    "taken": "Register similiar username in Session in under 30 seconds"
+    "free": "This name is available! Register it in 30 seconds",
+    "taken": "Register similiar name in Session in 30 seconds"
   }
 }

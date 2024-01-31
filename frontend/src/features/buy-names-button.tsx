@@ -16,7 +16,7 @@ export function BuyNamesButton({ loading, state, name }: {
   }, [loading, state])
 
   return (
-    <Link href={name ? `/buy?name=${name}` : '/buy'} className='w-full h-8 bg-neutral-900 flex items-center -mt-4 px-3 pb-2 pt-4 rounded-b-lg text-xs hover:!text-[var(--hover-color)] transition-colors' style={{
+    <Link href={name ? `/buy?name=${name}` : '/buy'} className='w-full h-8 bg-neutral-900 flex items-center -mt-4 px-3 pb-2 pt-4 rounded-b-lg text-[10px] 430:text-xs hover:!text-[var(--hover-color)] transition-colors' style={{
       // lighter than hover
       color: buttonState === 'default'
         ? 'hsl(174, 47%, 60%)'
