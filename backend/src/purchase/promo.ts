@@ -44,8 +44,8 @@ export async function calculatePriceWithCoupon(code: string): Promise<{ rub: Dec
       return { rub: calc(basePrice.rub), usd: calc(basePrice.usd) }
     } else if(result.discount_amount_in_rub && result.discount_amount_in_usd) {
       return { 
-        rub: new Decimal(basePrice.rub).minus(result.discount_amount_in_rub),
-        usd: new Decimal(basePrice.usd).minus(result.discount_amount_in_usd),
+        rub: new Decimal(basePrice.rub).minus(result.discount_amount_in_rub).clamp(0, basePrice.rub),
+        usd: new Decimal(basePrice.usd).minus(result.discount_amount_in_usd).clamp(0, basePrice.usd),
       }
     } else {
       return null

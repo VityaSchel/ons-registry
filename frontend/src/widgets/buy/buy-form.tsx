@@ -22,6 +22,28 @@ export function BuyForm() {
   const [couponNotFound, setCouponNotFound] = React.useState(false)
   const router = useRouter()
 
+  const handleCheckName = (name: string) => {
+    const abort = new AbortController()
+    // eslint-disable-next-line no-async-promise-executor
+    new Promise<void>(async () => {
+      if (new RegExp('^\\w([\\w-]*[\\w])?$', 'g').test(name)) {
+        const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + name, { signal: abort.signal })
+        if (request.status !== 200 && request.status !== 404) return setNameTaken(false)
+        const response = await request.json() as { ok: false, error: string } | { ok: true, mappings: object[] }
+        if (response.ok && response.mappings.length > 0) {
+          setNameTaken(true)
+        } else {
+          setNameTaken(false)
+        }
+      }
+    })
+    return () => abort.abort()
+  }
+
+  React.useEffect(() => {
+    handleCheckName(name as string)
+  }, [name])
+
   return (
     <div className='mt-12 lg:mt-[10vh] flex flex-col gap-5 max-w-full items-center px-4 md:px-10'>
       <div className='top-0 absolute w-screen h-[200vh] max-h-screen overflow-hidden pointer-events-none'>
@@ -102,24 +124,6 @@ export function BuyForm() {
               isSubmitting,
               /* and other goodies */
             }) => {
-              const handleCheckName = (name: string) => {
-                const abort = new AbortController()
-                // eslint-disable-next-line no-async-promise-executor
-                new Promise<void>(async () => {
-                  if (new RegExp('^\\w([\\w-]*[\\w])?$', 'g').test(name)) {
-                    const request = await fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + name, { signal: abort.signal })
-                    if (request.status !== 200 && request.status !== 404) return setNameTaken(false)
-                    const response = await request.json() as { ok: false, error: string } | { ok: true, mappings: object[] }
-                    if (response.ok && response.mappings.length > 0) {
-                      setNameTaken(true)
-                    } else {
-                      setNameTaken(false)
-                    }
-                  }
-                })
-                return () => abort.abort()
-              }
-
               const handleCheckCoupon = async (coupon: string) => {
                 setCouponNotFound(false)
                 if (coupon === '') return setPrice(basePrice)
