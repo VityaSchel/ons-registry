@@ -146,6 +146,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     
     await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
     if (email) {
+      console.log(`==[ ${name} ]==: Sending email to ${email} with seed phrase ${language}`)
       sendEmailWithSeedPhrase(email, mnemonic, language)
     } else {
       console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
@@ -174,22 +175,26 @@ function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'r
     name: 'ONS Registry',
   }
 
-  if(language === 'ru') {
-    client.send({
-      from: sender,
-      to: [{ email }],
-      subject: 'Спасибо за покупку ONS имени в Session',
-      text: 'Поздравляем с покупкой имени! Ваше имя уже активно и вас уже можно найти по нему в Session (если вы еще не можете перейти по нему, подождите до 10 минут для регистрации в блокчейне). Если вы захотите управлять своим именем (например, привязать это имя к другому SessionID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту фразу: ' + seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне. Пожалуйста, имейте в виду, что мы никак не связаны с OXEN, Session и не можем управлять блокчейном, а также помочь с вопросами, связанными с этим. Наш сайт не поддерживает управление вашим именем после покупки.\n\nСпасибо за покупку и ждем вас снова!',
-      category: 'Purchase completed',
-    })
-  } else {
-    client.send({
-      from: sender,
-      to: [{ email }],
-      subject: 'Thank you for purchasing ONS name in Session',
-      text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!',
-      category: 'Purchase completed',
-    })
+  try {
+    if(language === 'ru') {
+      client.send({
+        from: sender,
+        to: [{ email }],
+        subject: 'Спасибо за покупку ONS имени в Session',
+        text: 'Поздравляем с покупкой имени! Ваше имя уже активно и вас уже можно найти по нему в Session (если вы еще не можете перейти по нему, подождите до 10 минут для регистрации в блокчейне). Если вы захотите управлять своим именем (например, привязать это имя к другому SessionID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту фразу: ' + seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне. Пожалуйста, имейте в виду, что мы никак не связаны с OXEN, Session и не можем управлять блокчейном, а также помочь с вопросами, связанными с этим. Наш сайт не поддерживает управление вашим именем после покупки.\n\nСпасибо за покупку и ждем вас снова!',
+        category: 'Purchase completed',
+      })
+    } else {
+      client.send({
+        from: sender,
+        to: [{ email }],
+        subject: 'Thank you for purchasing ONS name in Session',
+        text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!',
+        category: 'Purchase completed',
+      })
+    }
+  } catch(e) {
+    console.error('Failed to send email', e) 
   }
 }
 

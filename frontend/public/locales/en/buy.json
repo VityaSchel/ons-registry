@@ -8,6 +8,7 @@
     "name_required": "Required",
     "sessionid_invalid": "Invalid Session ID. It looks like this: 057aeb66e45660c3bdfb7c62706f6440226af43ec13f3b6f899c1dd4db1b8fce5b",
     "sessionid_required": "Required",
+    "name_invalid": "You can use only Latin letters, numbers and \"-\" (except at the beginning and at the end)",
     "name_taken": "Unfortunately, this name is already taken",
     "fetch_failed": "Failed to connect to the server. Please check your internet connection",
     "internal_server_error": "Internal server error",
@@ -40,12 +41,26 @@
     }
   },
   "go_back": "Go back to home page",
-  "payment_processing": {
-    "title": "Processing...",
-    "description": "We are checking status of your payment. If you payed the invoice, you can close this page, your name will be mapped automatically in background"
-  },
-  "payment_canceled": {
-    "title": "Payment canceled",
-    "description": "Payment was canceled. If you have any questions, chat in Telegram: t.me/hlothdev"
+  "statuses": {
+    "created": {
+      "title": "Waiting for payment...",
+      "description": "We are checking status of your payment. If you payed the invoice, you can close this page, your name will be mapped automatically in background. The page is refreshed every 3 seconds."
+    },
+    "processing": {
+      "title": "Processing...",
+      "description": "We are working on recording your name to blockchain! Usually it takes about 30 seconds. You can close this page, the name will be mapped automatically in background. The page is refreshed every 3 seconds."
+    },
+    "canceled": {
+      "title": "Payment canceled",
+      "description": "Payment was canceled. If you have any questions, chat in Telegram: t.me/hlothdev"
+    },
+    "success": {
+      "title": "Congratulations!",
+      "description": "Your name is registered and you can use it. If you want to change the SessionID associated with this name, you will need to download the Oxen app and restore the wallet from the phrase that was sent to you at the email address you specified."
+    },
+    "errored": {
+      "title": "Error while mapping :(",
+      "description": "An error occurred while mapping your name. Information about this has already been sent to the administrator, but you still need to contact us to resolve this issue: t.me/hlothdev (send a link to this page)"
+    }
   }
 }
