@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { RadioGroup, RadioGroupItem } from '@/shared/shadcn/ui/radio-group'
+import { Label } from '@/shared/shadcn/ui/label'
 
 export function BuyForm() {
   const { name } = useRouter().query
@@ -63,7 +65,14 @@ export function BuyForm() {
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
           <Formik
-            initialValues={{ name: nameString, coupon: '', sessionid: '', email: '' }}
+            initialValues={{
+              name: nameString,
+              wallet: 'new',
+              coupon: '',
+              sessionid: '',
+              email: '',
+              owner: ''
+            }}
             validationSchema={
               Yup.object({
                 name: Yup.string()
@@ -78,6 +87,9 @@ export function BuyForm() {
                   .length(66, t('errors.sessionid_invalid'))
                   .matches(/^[a-z0-9]+$/, t('errors.sessionid_invalid'))
                   .required(t('errors.sessionid_required')),
+                owner: Yup.string()
+                  .length(95, t('errors.owner_invalid'))
+                  .matches(/[a-zA-Z]+/, t('errors.owner_invalid')),
                 email: Yup.string()
                   .email(t('errors.email_invalid'))
               })
@@ -93,7 +105,8 @@ export function BuyForm() {
                     ...(values.coupon && { coupon: values.coupon }),
                     currency: 'rub',
                     ...(values.email && { email: values.email }),
-                    language: i18n.language === 'ru' ? 'ru' : 'en'
+                    language: i18n.language === 'ru' ? 'ru' : 'en',
+                    owner: values.owner
                   })
                 })
                 if (String(request.status).startsWith('5')) {
@@ -125,6 +138,7 @@ export function BuyForm() {
               handleBlur,
               handleSubmit,
               isSubmitting,
+              setFieldValue
               /* and other goodies */
             }) => {
               const handleCheckCoupon = async (coupon: string) => {
@@ -174,17 +188,48 @@ export function BuyForm() {
                     />
                     {errors.sessionid && touched.sessionid && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.sessionid}</span>}
                   </div>
-                  <div className='flex flex-col gap-1 w-full'>
-                    <Input
-                      name="email"
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      value={values.email}
-                      placeholder={t('fields.email')}
-                    />
-                    <span className='text-neutral-600 text-sm ml-2 mb-1'>{t('fields.email_hint')}</span>
-                    {errors.email && touched.email && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.email}</span>}
-                  </div>
+                  <RadioGroup 
+                    name='wallet'
+                    value={values.wallet} 
+                    onValueChange={newValue => setFieldValue('wallet', newValue)} 
+                    className='flex gap-6 flex-row mt-2'
+                  >
+                    <div className="flex space-x-2">
+                      <RadioGroupItem value='new' id='new-wallet' className='mt-1' />
+                      <Label htmlFor='new-wallet' className='leading-5'>{t('fields.wallet_type.new')}</Label>
+                    </div>
+                    <div className="flex space-x-2">
+                      <RadioGroupItem value='owned' id='owned-wallet' className='mt-1' />
+                      <Label htmlFor='owned-wallet' className='leading-5'>{t('fields.wallet_type.owned')}</Label>
+                    </div>
+                  </RadioGroup>
+                  {values.wallet === 'new' && (
+                    <div className='flex flex-col gap-1 w-full'>
+                      <Input
+                        name="email"
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        value={values.email}
+                        placeholder={t('fields.email')}
+                      />
+                      <span className='text-neutral-600 text-sm ml-2 mb-1'>{t('fields.email_hint')}</span>
+                      {errors.email && touched.email && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.email}</span>}
+                    </div>
+                  )}
+                  {values.wallet === 'owned' && (
+                    <div className='flex flex-col gap-1 w-full'>
+                      <Input
+                        name="owner"
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        value={values.owner}
+                        placeholder={t('fields.owner')}
+                        maxLength={95}
+                      />
+                      <span className='text-neutral-600 text-sm ml-2 mb-1'>{t('fields.owner_hint')}</span>
+                      {errors.owner && touched.owner && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.owner}</span>}
+                    </div>
+                  )}
                   <div className='flex flex-col gap-1 w-full'>
                     <Input
                       name="coupon"
@@ -200,12 +245,12 @@ export function BuyForm() {
                         handleBlur(e)
                         handleCheckCoupon(e.target.value.trim())
                       }}
-                      className={cx('transition-all', { 'border-red-600': couponNotFound })}
+                      className={cx('transition-all mt-2', { 'border-red-600': couponNotFound })}
                     />
                     {errors.coupon && touched.coupon && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.coupon}</span>}
                   </div>
                   <span className='text-2xl my-2'>{t('final_price')}: <span  className='font-bold'>{price.rub + ' ₽'}</span></span>
-                  <Button type="submit" disabled={isSubmitting || nameTaken || !values.sessionid || !values.name || Object.values(errors).filter(Boolean).length > 0}>
+                  <Button type="submit" disabled={isSubmitting || nameTaken || !values.sessionid || !values.name || Object.values(errors).filter(Boolean).length > 0 || (values.wallet === 'owned' && !values.owner)}>
                     {t('submit.with_yookassa')}
                   </Button>
                 </form>

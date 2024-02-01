@@ -20,6 +20,7 @@ export type Invoice = {
   created_at: number
   status: 'created' | 'processing' | 'canceled' | 'success' | 'errored'
   email?: string
+  owner?: string
   language: 'ru' | 'en'
 }
 
@@ -41,6 +42,9 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
       .optional(),
     currency: z.enum(['rub', 'usd']),
     language: z.enum(['ru', 'en']),
+    owner: z.string()
+      .length(95)
+      .regex(/^[a-zA-Z]+$/),
     email: z.string()
       .email()
       .optional()
@@ -76,7 +80,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   }
 
   const invoiceUUID = randomUUID()
-  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
     invoiceUUID, 
     name, 
     body.data.sessionID, 
@@ -86,7 +90,8 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     Date.now(), 
     'created', 
     body.data.email ?? null, 
-    body.data.language
+    body.data.language,
+    body.data.owner
   ])
   const redirectUrl = `${
     process.env.YOOKASSA_API_TOKEN.startsWith('test')
@@ -99,7 +104,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
       ok: true, 
       redirect: redirectUrl
     })
-    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, body.data.email, true)
+    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, { email: body.data.email, owner: body.data.email }, true)
     return 
   }
 

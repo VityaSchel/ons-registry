@@ -28,7 +28,7 @@ async function sendNotificationToAdmin(text: string) {
   })
 }
 
-export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', email?: string, dryRun = false) {
+export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', walletInfo: { email?: string, owner?: string }, dryRun = false) {
   await purchases.run('UPDATE invoices SET status = "processing" WHERE uuid = ?', invoiceUUID)  
 
   const walletDir = __dirname + '../../.oxen/'
@@ -126,6 +126,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
           'params': { 
             'name': name,
             'type': 'session',
+            ...(walletInfo.owner && { 'owner': walletInfo.owner }),
             'value': sessionID,
             'priority': 0, 
             'get_tx_hex': true 
@@ -145,9 +146,13 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     }
     
     await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-    if (email) {
-      console.log(`==[ ${name} ]==: Sending email to ${email} with seed phrase ${language}`)
-      sendEmailWithSeedPhrase(email, mnemonic, language)
+    if (walletInfo.email) {
+      if(!walletInfo.owner) {
+        console.log(`==[ ${name} ]==: Sending email to ${walletInfo.email} with seed phrase ${language}`)
+        sendEmailWithSeedPhrase(walletInfo.email, mnemonic, language)
+      } else {
+        console.log(`==[ ${name} ]==: User specified email, but also specified owner, so not sending seed phrase`)
+      }
     } else {
       console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
     }
