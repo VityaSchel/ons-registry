@@ -200,7 +200,9 @@ async function fixEncryptedValues() {
   const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE decrypted_value=value AND unhashed_name IS NOT NULL')
   for (const row of rows) {
     const decrypted = decryptONSValue(row.value, row.unhashed_name as string)
-    console.log(decrypted)
+    if (decrypted !== row.decrypted_value) {
+      await ons.run('UPDATE mappings SET decrypted_value = ? WHERE name_hash = ?', decrypted, row.name_hash)
+    }
   }
 }
 
