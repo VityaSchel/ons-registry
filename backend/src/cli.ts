@@ -192,6 +192,17 @@ async function fixBackupOwner(onsDbPath: string) {
   }
 }
 
+async function fixEncryptedValues() {
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE decrypted_value=value AND unhashed_name IS NOT NULL')
+  for (const row of rows) {
+    console.log(row.unhashed_name)
+  }
+}
+
 switch(process.argv[2]) {
   case 'migrate':
     if (!process.argv[3]) {
@@ -214,6 +225,9 @@ switch(process.argv[2]) {
     break
   case 'fix_backup_owner':
     await fixBackupOwner(process.argv[3])
+    break
+  case 'fix_encrypted_values':
+    await fixEncryptedValues()
     break
   default:
     console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db>')
