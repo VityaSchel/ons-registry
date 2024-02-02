@@ -9,14 +9,14 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
     if (record.payment_id) {
       const exists = await checkIfExists(ons, record.name_hash, record.payment_id)
       if (exists) {
-        console.log('Skipping', record.name_hash, 'because it is duplicate')
+        console.log('Skipping', record.name_hash, 'because it is duplicate with payment_id', record.payment_id)
         continue
       }
     }
     const unhashedName = await unhash(record.name_hash, ons)
     const decryptedValue = unhashedName === null ? null : decryptONSValue(record.value, unhashedName)
     const owners = generateOwners(record.owner)
-    const backupOwners = generateOwners(record.backup_owner)
+    const backupOwners = record.backup_owner ? generateOwners(record.backup_owner) : { keypair: null, oxen: null }
     await ons.run(
       'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       record.name_hash,
@@ -38,7 +38,7 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
 }
 
 async function checkIfExists(ons: Db, nameHash: string, paymentId: string) {
-  return await ons.run('SELECT * FROM mappings WHERE name_hash = ? AND payment_id = ?', [
+  return await ons.get('SELECT * FROM mappings WHERE name_hash = ? AND payment_id = ? AND payment_id IS NOT NULL', [
     nameHash,
     paymentId
   ])

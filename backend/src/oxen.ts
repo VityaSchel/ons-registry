@@ -81,17 +81,23 @@ export async function sync() {
     console.log(`Found ${transactions.length} transactions`)
 
     if (transactions.length > 0) {
-      const transactionsInfo = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          txs_hashes: transactions,
-          tx_extra: true
+      const transactionsInfo: { extra: object, tx_hash: string, block_height: number }[] = []
+      for(let txI = 0; txI < transactions.length; txI++) {
+        const tx = transactions[txI]
+        const transactionsResponse = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            txs_hashes: [tx],
+            tx_extra: true
+          })
         })
-      })
-        .then(req => req.json()) as { txs: { extra: object, tx_hash: string, block_height: number }[] }
-      
-      const onsRelatedTransactions: OnsRecord[] = transactionsInfo.txs
+          .then(req => req.json()) as { txs: typeof transactionsInfo }
+        console.log(`[${txI}/${transactions.length}] Fetched`, transactionsResponse.txs.length, 'transactions from txID', tx)
+        transactionsInfo.push(...transactionsResponse.txs)
+      }
+
+      const onsRelatedTransactions: OnsRecord[] = transactionsInfo
         .filter(tx => 'extra' in tx && 'ons' in tx.extra)
         .map(tx => {
           const extra = tx.extra as OnsExtra
