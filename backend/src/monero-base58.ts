@@ -22,7 +22,7 @@ export function keypairToOxen(network: Network, keypair: string) {
   ]))
 }
 
-export const generateOwners = (ownerString) => {
+export const generateOwners = (ownerString: string) => {
   if (ownerString.length === 160) {
     return { keypair: ownerString, oxen: keypairToOxen(0x72, ownerString) }
   } else {
