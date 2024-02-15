@@ -3,6 +3,8 @@ import { useTranslation } from 'next-i18next'
 import Link from 'next/link'
 import TeleramLogo from '@/assets/telegram.svg'
 
+const linkClasses = 'hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg'
+
 export function Footer() {
   const { t } = useTranslation('footer')
 
@@ -30,13 +32,14 @@ export function Footer() {
         </div>
         <div className='flex flex-col gap-5'>
           <h2 className='smwht:h-16 lg:h-auto text-2xl 900:text-3xl font-bold'>{t('links')}</h2>
-          <Link href='https://sessionbots.directory/' className='hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg' target='_blank' rel='noreferrer'>sessionbots.directory</Link>
-          <Link href='https://t.me/session_nodejs' className='hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2' target='_blank' rel='noreferrer'>
+          <Link href='https://sessionbots.directory/' className={linkClasses} target='_blank' rel='noreferrer'>sessionbots.directory</Link>
+          <Link href='https://t.me/session_nodejs' className={linkClasses + ' hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2'} target='_blank' rel='noreferrer'>
             <TeleramLogo height={20} /> {t('telegram')}
           </Link>
         </div>
-        <div className='ml-auto flex items-end text-muted w-48 text-right shrink-0'>
-          <span>{t('made_by')} <Link href='https://github.com/vityaschel' className='font-semibold hover:text-indigo-600 transition-colors duration-200'>{t('author')}</Link></span>
+        <div className='ml-auto flex items-end w-48 shrink-0 flex-col justify-between gap-4'>
+          <Link className={linkClasses} href='https://t.me/session_nodejs/73' target='_blank' rel='nofollow noreferrer'>API Docs</Link>
+          <span className='text-muted text-right'>{t('made_by')} <Link href='https://github.com/vityaschel' className='font-semibold hover:text-indigo-600 transition-colors duration-200'>{t('author')}</Link></span>
         </div>
       </div>
       <div className='pointer-events-none absolute bottom-[-65vw] bg-gradient-radial w-[120vw] h-auto aspect-square from-indigo-900 gradien via-transparent to-transparent opacity-20'></div>

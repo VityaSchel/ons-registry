@@ -152,7 +152,7 @@ fastify.get('/list', async (request, reply) => {
     ? query.data.type.filter(e => ['session', 'wallet', 'lokinet'].includes(e)) 
       .map(e => `'${e}'`)
       .join(',')
-    : '\'session\',\'wallet\',\'lokinet\''
+    : '\'session\''
   const filters = `
     ${query.data.query ? 'AND hashes.string LIKE :query' : ''}
     ${query.data.min_block ? 'AND mappings.updated_at_block >= :minBlock' : ''}
