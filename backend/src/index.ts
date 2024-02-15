@@ -122,6 +122,7 @@ fastify.get('/list', async (request, reply) => {
     limit: z.coerce.number()
       .int()
       .positive()
+      .or(z.literal('all'))
       .optional(),
     sort_by: z.enum([
       'updatedAtBlock',
@@ -138,7 +139,7 @@ fastify.get('/list', async (request, reply) => {
       .int()
       .min(0)
       .optional(),
-  }).safeParse(request.query)
+  }).safeParseAsync(request.query)
   if(!query.success) {
     reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
     return
@@ -178,7 +179,7 @@ fastify.get('/list', async (request, reply) => {
     LIMIT (:limit)
     OFFSET (:offset)
   `, {
-    ':limit': query.data.limit ?? 100,
+    ...(query.data.limit !== 'all' && { ':limit': query.data.limit ?? 100 }),
     ':offset': query.data.offset ?? 0,
     ...filtersVariables
   })
