@@ -14,6 +14,7 @@ import { PurchasePromoGet } from './purchase/promo.js'
 import { PurchaseCreateInvoice } from './purchase/invoice.js'
 import { PurchaseCallback } from './purchase/callback.js'
 import { PurchaseStatus } from './purchase/status.js'
+import crypto from 'crypto'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -176,11 +177,12 @@ fastify.get('/list', async (request, reply) => {
     WHERE mappings.type IN (${types})
     ${filters}
     ORDER BY ${sortBy} ${sortDir}
-    LIMIT (:limit)
-    OFFSET (:offset)
+    ${query.data.limit !== 'all' ? 'LIMIT (:limit) OFFSET (:offset)' : ''}
   `, {
-    ...(query.data.limit !== 'all' && { ':limit': query.data.limit ?? 100 }),
-    ':offset': query.data.offset ?? 0,
+    ...(query.data.limit !== 'all' && {
+      ':limit': query.data.limit ?? 100,
+      ':offset': query.data.offset ?? 0,
+    }),
     ...filtersVariables
   })
   const onsRecords = await Promise.all(mappings.map(mapOnsRecord))
@@ -194,11 +196,24 @@ fastify.get('/list', async (request, reply) => {
     ...filtersVariables
   })
 
-  reply.send({
+  const response = {
     ok: true,
     mappings: onsRecords,
     total: total?.['COUNT(*)'] ?? 0,
-  })
+  }
+
+  const etag = `"${crypto.createHash('sha256').update(JSON.stringify(response)).digest('hex')}"`
+
+  if(query.data.limit === 'all') {
+    if(request.headers['if-none-match'] === etag) {
+      reply.status(304).send()
+      return
+    } else {
+      reply.header('E-Tag', etag)
+    }
+  }
+
+  reply.send(response)
 })
 
 const mapOnsRecord = async (mapping: OnsMapping) => {
