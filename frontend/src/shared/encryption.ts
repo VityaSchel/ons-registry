@@ -1,8 +1,7 @@
-import { uint8arrayToBase64 } from '@/shared/utils'
+import { uint8arrayToHex, uint8arrayToBase64, hexToUint8array } from '@/shared/utils'
 import blake2 from 'blake2b'
-import sodiumAead from 'sodium-javascript/crypto_aead'
-import sodiumSecretbox from 'sodium-javascript/crypto_secretbox'
-import sodiumSecretbox from 'sodium-javascript/crypto_hash'
+import sodium from 'libsodium-wrappers'
+import argon2 from 'argon2-browser'
 
 export async function hash(input: string) {
   const enc = new TextEncoder()
@@ -11,36 +10,34 @@ export async function hash(input: string) {
     .digest('binary'))
 }
 
+const crypto_pwhash_SALTBYTES = 16
+const crypto_pwhash_MEMLIMIT_MODERATE = 268435456
+const crypto_pwhash_OPSLIMIT_MODERATE = 3
+
 const ED25519_PUBLIC_KEY_LENGTH = 32
 const SESSION_PUBLIC_KEY_BINARY_LENGTH = 1 + ED25519_PUBLIC_KEY_LENGTH
 function decryptXChachaWithKey(message: Uint8Array, nonce: Uint8Array, key: Uint8Array) {
-  const decBuffer = Buffer.alloc(message.byteLength - sodiumAead.crypto_aead_chacha20poly1305_ietf_ABYTES)
-  sodiumAead.crypto_aead_chacha20poly1305_ietf_decrypt(
+  const decBuffer = new Uint8Array(message.byteLength - sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES)
+  const result = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
     decBuffer,
-    null,
     message,
     null,
     nonce,
     key
   )
-  return decBuffer.toString('hex')
+  return uint8arrayToHex(result)
 }
 
 function decryptSecretboxWithKey(message: Uint8Array, nonce: Uint8Array, key: Uint8Array) {
-  const decBuffer = new Uint8Array(message.byteLength - sodiumSecretbox.crypto_secretbox_MACBYTES)
-  if (!sodiumSecretbox.crypto_secretbox_open_easy(
-    decBuffer,
+  const result = sodium.crypto_secretbox_open_easy(
     message,
     nonce,
     key
-  )) {
-    throw new Error('could not verify data')
-  } else {
-    return decBuffer
-  }
+  )
+  return uint8arrayToHex(result)
 }
 
-function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2id13') {
+async function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2id13') {
   const enc = new TextEncoder()
   if (algorithm === 'blake2b') {
     const key = blake2(32)
@@ -50,36 +47,46 @@ function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2id13') 
       .update(enc.encode(unhashedName))
       .digest()
   } else {
-    const out = new Uint8Array(sodiumAead.crypto_aead_chacha20poly1305_ietf_KEYBYTES)
-    const OLD_ENC_SALT = new Uint8Array(sodium.crypto_pwhash_SALTBYTES)
-    sodium.crypto_pwhash(
-      out,
-      Buffer.from(unhashedName),
-      OLD_ENC_SALT,
-      sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-      sodium.crypto_pwhash_MEMLIMIT_MODERATE,
-      sodium.crypto_pwhash_ALG_ARGON2ID13
-    )
-    return out
+    const OLD_ENC_SALT = new Uint8Array(crypto_pwhash_SALTBYTES)
+    // const out = sodium.crypto_pwhash(
+    //   sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
+    //   enc.encode(unhashedName),
+    //   OLD_ENC_SALT,
+    //   sodium.crypto_pwhash_OPSLIMIT_MODERATE,
+    //   sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+    //   sodium.crypto_pwhash_ALG_ARGON2ID13
+    // )
+    const out = await argon2.hash({
+      pass: unhashedName,
+      salt: OLD_ENC_SALT,
+      time: crypto_pwhash_OPSLIMIT_MODERATE,
+      mem: crypto_pwhash_MEMLIMIT_MODERATE,
+      hashLen: sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
+      parallelism: 1,
+      type: argon2.ArgonType.Argon2id
+    })
+    return out.hash
   }
 }
 
-function splitEncryptedValue(encryptedValue: Buffer, legacyFormat: boolean): [Buffer, Buffer] {
+function splitEncryptedValue(encryptedValue: Uint8Array, legacyFormat: boolean): [Uint8Array, Uint8Array] {
   if (legacyFormat) {
-    return [encryptedValue, Buffer.alloc(sodiumSecretbox.crypto_secretbox_NONCEBYTES)]
+    return [encryptedValue, new Uint8Array(sodium.crypto_secretbox_NONCEBYTES)]
   } else {
-    const messageLength = encryptedValue.length - sodiumAead.crypto_aead_chacha20poly1305_ietf_NPUBBYTES
+    const messageLength = encryptedValue.length - sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
     const nonce = encryptedValue.subarray(messageLength)
     const message = encryptedValue.subarray(0, messageLength)
     return [message, nonce]
   }
 }
 
-export function decryptONSValue(value: string, unhashedName: string) {
-  const encryptedValue = Buffer.from(value, 'hex')
-  const legacyFormat = encryptedValue.length === SESSION_PUBLIC_KEY_BINARY_LENGTH + sodiumSecretbox.crypto_secretbox_MACBYTES
+export async function decryptONSValue(value: string, unhashedName: string) {
+  console.time('startEncrypting')
+  const encryptedValue = hexToUint8array(value)
+  const legacyFormat = encryptedValue.length === SESSION_PUBLIC_KEY_BINARY_LENGTH + sodium.crypto_secretbox_MACBYTES
   try {
-    const key = generateKey(unhashedName, legacyFormat ? 'argon2id13' : 'blake2b')
+    const key = await generateKey(unhashedName, legacyFormat ? 'argon2id13' : 'blake2b')
+    console.log('key', uint8arrayToHex(key))
     const [message, nonce] = splitEncryptedValue(encryptedValue, legacyFormat)
     if (legacyFormat) {
       return decryptSecretboxWithKey(message, nonce, key)

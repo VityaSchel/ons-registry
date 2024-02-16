@@ -8,11 +8,10 @@ const nextConfig = {
   i18n: {
     ...i18n.i18n
   },
-  webpack(config) {
+  webpack(config, { isServer, webpack }) {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg'),
     )
-
     config.module.rules.push(
       {
         ...fileLoaderRule,
@@ -26,8 +25,28 @@ const nextConfig = {
         use: ['@svgr/webpack'],
       },
     )
-
     fileLoaderRule.exclude = /\.svg$/i
+
+    config.module.rules.push({
+      test: /\.wasm$/,
+      loader: 'base64-loader',
+      type: 'javascript/auto',
+    })
+    config.module.noParse = /\.wasm$/
+    config.module.rules.forEach((rule) => {
+      (rule.oneOf || []).forEach((oneOf) => {
+        if (oneOf.loader && oneOf.loader.indexOf('file-loader') >= 0) {
+          oneOf.exclude.push(/\.wasm$/)
+        }
+      })
+    })
+    if (!isServer) {
+      config.resolve.fallback.fs = false
+    }
+
+    config.plugins.push(
+      new webpack.IgnorePlugin({ resourceRegExp: /\/__tests__\// })
+    )
 
     return config
   },

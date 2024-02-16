@@ -19,7 +19,7 @@ for (let n = 0; n <= 0xff; ++n) {
   const hexOctet = n.toString(16).padStart(2, '0')
   byteToHex.push(hexOctet)
 }
-export function uint8ArrayToHex(arrayBuffer: Uint8Array) {
+export function uint8arrayToHex(arrayBuffer: Uint8Array) {
   const buff = new Uint8Array(arrayBuffer)
   const hexOctets = []
 
@@ -38,4 +38,16 @@ export async function uint8arrayToBase64(input: Uint8Array) {
   })
   // remove the `data:...;base64,` part from the start
   return base64url.slice(base64url.indexOf(',') + 1)
+}
+
+export function stringToHex(plain: string) {
+  return plain.split('')
+    .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('')
+}
+
+export function hexToUint8array(hexString: string): Uint8Array {
+  const matches = hexString.match(/.{1,2}/g)
+  if(matches === null) return new Uint8Array()
+  return Uint8Array.from(matches.map((byte) => parseInt(byte, 16)))
 }
