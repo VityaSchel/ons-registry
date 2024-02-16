@@ -2,6 +2,7 @@
   "compilerOptions": {
     "lib": [
       "dom",
+      "WebWorker",
       "dom.iterable",
       "esnext"
     ],
@@ -25,6 +26,9 @@
       {
         "name": "next"
       }
+    ],
+    "types": [
+      "./node_modules/network-information-types"
     ]
   },
   "include": [
@@ -32,7 +36,8 @@
     "**/*.ts",
     "**/*.tsx",
     "next-i18next.config.js",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src/global.d.ts"
   ],
   "exclude": [
     "node_modules"

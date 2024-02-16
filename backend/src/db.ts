@@ -35,20 +35,21 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
       backupOwners = generateOwners(record.backup_owner)
     }
     await ons.run(
-      'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      record.name_hash,
-      unhashedName,
-      owners.keypair,
-      owners.oxen,
-      backupOwners.keypair,
-      backupOwners.oxen,
-      record.type,
-      record.value,
-      decryptedValue,
-      record.transaction_id,
-      record.updated_at_block,
-      record.expires_at_block,
-      record.action
+      'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (:name_hash, :unhashed_name, :owner, :owner_oxen, :backup_owner, :backup_owner_oxen, :type, :value, :decrypted_value, :transaction_id, :updated_at_block, :expires_at_block, :action)', {
+        ':name_hash': record.name_hash,
+        ':unhashed_name': unhashedName,
+        ':owner': owners.keypair,
+        ':owner_oxen': owners.oxen,
+        ':backup_owner': backupOwners.keypair,
+        ':backup_owner_oxen': backupOwners.oxen,
+        ':type': record.type,
+        ':value': record.value,
+        ':decrypted_value': decryptedValue,
+        ':transaction_id': record.transaction_id,
+        ':updated_at_block': record.updated_at_block,
+        ':expires_at_block': record.expires_at_block,
+        ':action': record.action
+      }
     )
   }
   console.log('Finished adding', onsRecord.length, 'ONS records')

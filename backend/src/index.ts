@@ -209,7 +209,7 @@ fastify.get('/list', async (request, reply) => {
       reply.status(304).send()
       return
     } else {
-      reply.header('E-Tag', etag)
+      reply.header('ETag', etag)
     }
   }
 

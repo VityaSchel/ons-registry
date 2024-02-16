@@ -1,4 +1,6 @@
 import i18n from './next-i18next.config.js'
+import withPWA from 'next-pwa'
+import workerCache from './worker-cache.js'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -37,4 +39,26 @@ const nextConfig = {
   }
 }
 
-export default nextConfig
+export default withPWA({
+  dest: 'public',
+  cacheStartUrl: true,
+  dynamicStartUrl: false,
+  reloadOnOnline: false,
+  disable: process.env.NODE_ENV !== 'production',
+  mode: 'production',
+  exclude: [
+    ({ asset }) => {
+      if (
+        asset.name.startsWith('server/') ||
+        asset.name.match(/^((app-|^)build-manifest\.json|react-loadable-manifest\.json)$/)
+      ) {
+        return true
+      }
+      if (process.env.NODE_ENV !== 'production' && !asset.name.startsWith('static/runtime/')) {
+        return true
+      }
+      return false
+    }
+  ],
+  runtimeCaching: workerCache
+})(nextConfig)

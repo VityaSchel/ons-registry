@@ -26,6 +26,6 @@ export const generateOwners = (ownerString: string) => {
   if (ownerString.length === 160) {
     return { keypair: ownerString, oxen: keypairToOxen(0x72, ownerString) }
   } else {
-    return { oxen: oxenToKeypair(ownerString), keypair: ownerString }
+    return { oxen: ownerString, keypair: oxenToKeypair(ownerString) }
   }
 }

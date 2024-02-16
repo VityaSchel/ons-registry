@@ -7,3 +7,12 @@ declare module '*.svg' {
 
   export default ReactComponent
 }
+
+declare global {
+  interface Navigator {
+    mozConnection?: NetworkInformation;
+    webkitConnection?: NetworkInformation;
+  }
+}
+
+export {}

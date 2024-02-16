@@ -8,6 +8,8 @@ import { SortingState } from '@tanstack/react-table'
 import { Pagination as TablePagination } from '@/entities/table-pagination'
 import { Input } from '@/features/input'
 import { BuyNamesButton } from '@/features/buy-names-button'
+import { SearchingStorageType } from '@/features/searching-storage-type'
+import { fetchList, fetchRecord } from '@/shared/api'
 
 export function Search() {
   const { t, i18n } = useTranslation('common')
@@ -98,18 +100,16 @@ export function Search() {
 
   const getRecentOns = (sort?: SortingState) => {
     return new Promise<{ mappings: OnsRecord[], total: number }>(resolve => {
-      fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
-        limit: '100',
+      fetchList({
+        limit: 100,
         type: 'session',
         ...(sort && {
           sort_by: sort[0].id,
           sort_dir: sort[0].desc ? 'DESC' : 'ASC'
         })
-      }))
-        .then(res => res.json())
-        .then(json => {
-          const records = json as { mappings: OnsRecord[], total: number } | { ok: false, error: string }
-          if ('error' in records) throw new Error(records.error)
+      })
+        .then(records => {
+          if (!records.ok) throw new Error(records.error)
           resolve(records)
         })
         .catch(err => console.error(err))
@@ -120,19 +120,17 @@ export function Search() {
     const abortController = new AbortController()
 
     const promise = new Promise<{ mappings: OnsRecord[], total: number }>(resolve => {
-      fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+      fetchList({
         ...(mode === 'names' && searchQuery && { query: searchQuery }),
-        limit: '100',
+        limit: 100,
         type: 'session',
         ...(mode === 'by_author' && { owner: searchQuery }),
         ...(sort && {
           sort_by: sort[0].id,
           sort_dir: sort[0].desc ? 'DESC' : 'ASC'
         })
-      }), { signal: abortController.signal })
-        .then(res => res.json())
-        .then(json => {
-          const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+      }, { signal: abortController.signal })
+        .then(result => {
           if ('error' in result) throw new Error(result.error)
           resolve({ 
             mappings: result.mappings,
@@ -170,13 +168,11 @@ export function Search() {
     const abortController = new AbortController()
 
     const promise = new Promise<OnsRecord[] | null>(resolve => {
-      fetch(
+      fetchRecord(
         process.env.NEXT_PUBLIC_API_URL + '/session/' + searchQuery, 
         { signal: abortController.signal }
       )
-        .then(res => res.json())
-        .then(json => {
-          const result = json as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+        .then(result => {
           if ('error' in result) {
             if(result.error === 'NOT_FOUND') {
               resolve(null)
@@ -208,13 +204,12 @@ export function Search() {
   const hasMore = displaying && displaying.to < (total ?? 0)
 
   const handleLoad = async (offset: number) => {
-    const result = await fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
+    const result = await fetchList({
       ...(searchQuery && { query: searchQuery }),
-      limit: '100', 
-      offset: String(offset),
+      limit: 100, 
+      offset: offset,
       type: 'session'
-    }))
-      .then(res => res.json()) as { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
+    })
     if ('error' in result) throw new Error(result.error)
     return result.mappings as OnsRecord[]
   }
@@ -312,32 +307,35 @@ export function Search() {
           </span>}
         </>)}
       </div>
-      <div className='mt-6 w-full flex flex-col gap-6 items-center'>
-        <ONSRecordsTable
-          data={showRecent ? recentOns : searchResults}
-          exactResults={showRecent ? [] : exactResults}
-          loading={showRecent ? recentOns === null : (searchResults === null && exactResults === null)}
-          onSortChange={showRecent ? handleSortRecent : handleSortResults}
-        />
-        <div className='flex flex-col gap-2 items-center'>
-          {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
-            {t('pagination.load_more')}
-          </Button>}
-        </div>
-        <div className='flex gap-2 items-center justify-between w-full flex-col sm:flex-row'>
-          {(total && !loading) ? (
-            <span className='text-sm font-normal'>{t('pagination.showing')
-              .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
-              .replace('{total}', String(total))
-            }</span>
-          ) : <span />}
-          {Boolean(total) && total && (
-            <TablePagination
-              page={(displaying ? displaying.from / 100 : 0) + 1}
-              onChange={handleChangePage}
-              totalPages={Math.ceil(total / 100)}
-            />
-          )}
+      <div className='w-full flex flex-col mt-6 gap-1'>
+        <SearchingStorageType />
+        <div className='flex flex-col gap-6 items-center'>
+          <ONSRecordsTable
+            data={showRecent ? recentOns : searchResults}
+            exactResults={showRecent ? [] : exactResults}
+            loading={showRecent ? recentOns === null : (searchResults === null && exactResults === null)}
+            onSortChange={showRecent ? handleSortRecent : handleSortResults}
+          />
+          <div className='flex flex-col gap-2 items-center'>
+            {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
+              {t('pagination.load_more')}
+            </Button>}
+          </div>
+          <div className='flex gap-2 items-center justify-between w-full flex-col sm:flex-row'>
+            {(total && !loading) ? (
+              <span className='text-sm font-normal'>{t('pagination.showing')
+                .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
+                .replace('{total}', String(total))
+              }</span>
+            ) : <span />}
+            {Boolean(total) && total && (
+              <TablePagination
+                page={(displaying ? displaying.from / 100 : 0) + 1}
+                onChange={handleChangePage}
+                totalPages={Math.ceil(total / 100)}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

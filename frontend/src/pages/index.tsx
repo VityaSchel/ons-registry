@@ -1,11 +1,16 @@
+import React from 'react'
 import { HomepageHero } from '@/widgets/homepage/hero'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import Head from 'next/head'
 import { useTranslation } from 'next-i18next'
-
+import { fetchFullListForLocalUse } from '@/shared/fetch-local-list'
 
 export default function HomePage() {
   const { t } = useTranslation('common')
+
+  React.useEffect(() => {
+    fetchFullListForLocalUse()
+  }, [])
   
   return (
     <>
