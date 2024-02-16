@@ -1,5 +1,7 @@
+import { hash } from '@/shared/encryption'
 import { OnsRecord } from '@/shared/model/ons-record'
 import { store } from '@/shared/store'
+import { matchFound } from '@/shared/store/slices/search-storage'
 
 async function awaitCacheInitialization() {
   if (store.getState().searchStorage.searchStorageType === 'initializing') {
@@ -22,15 +24,7 @@ export async function fetchList(options: { query?: string, offset?: number, limi
     let mappings = state.searchStorageData.mappings
     if(options.query) {
       const query = options.query.toLowerCase()
-      mappings = mappings.filter(mapping => {
-        return Object.values(mapping).some(value => {
-          if (typeof value === 'string') {
-            return value.toLowerCase().includes(query)
-          } else {
-            return false
-          }
-        })
-      })
+      mappings = mappings.filter(mapping => mapping.name && mapping.name.toLowerCase().includes(query))
     }
     if (options.owner) {
       if (options.owner.length === 160) {
@@ -80,8 +74,16 @@ export async function fetchRecord(name: string, fetchOptions?: { signal: AbortSi
   await awaitCacheInitialization()
   const state = store.getState().searchStorage
   if (state.searchStorageType === 'local' && state.searchStorageData) {
-    // TODO: add hashing and check if name_hash matches and send server request
-    const mappings = state.searchStorageData.mappings.filter(mapping => mapping.name === name)
+    let mappings = state.searchStorageData.mappings.filter(mapping => mapping.name === name)
+    if (mappings.length === 0) {
+      const hashedName = await hash(name)
+      mappings = state.searchStorageData.mappings.filter(mapping => mapping.nameHash === hashedName)
+      if(mappings.length > 0) {
+        console.log('New match found :O', mappings)
+        mappings = mappings.map(r => ({ ...r, name }))
+        store.dispatch(matchFound({ hash: hashedName, name }))
+      }
+    }
     return {
       ok: true,
       mappings: mappings,

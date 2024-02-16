@@ -82,6 +82,7 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
             }
             return {
               name: unhashedName,
+              nameHash: hashedName,
               owner: {
                 keypair: mapping.owner,
                 oxen: mapping.owner_oxen,
@@ -198,7 +199,9 @@ fastify.get('/list', async (request, reply) => {
 
   const response = {
     ok: true,
-    mappings: onsRecords,
+    mappings: onsRecords
+    // TODO: rEmove
+      .map(r => r.name === 'hloth' ? ({ ...r, name: null }) : r),
     total: total?.['COUNT(*)'] ?? 0,
   }
 
@@ -221,7 +224,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   const sessionID = unhashedName ? mapping.decrypted_value : null
   return {
     name: unhashedName,
-    ...(unhashedName === null && { nameHash: mapping.name_hash }),
+    nameHash: mapping.name_hash,
     owner: {
       keypair: mapping.owner,
       oxen: mapping.owner_oxen,

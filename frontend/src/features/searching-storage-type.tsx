@@ -16,11 +16,11 @@ export function SearchingStorageType() {
         <span className='font-medium text-neutral-600 flex gap-1.5 items-center text-sm'>
           {searchStorageType === 'local' ? t('searching_storage.type.local') : t('searching_storage.type.remote')}
           <Tooltip content={
-            <span className='text-center block max-w-xl whitespace-pre-wrap text-white'>
+            <span className='text-center block max-w-96 whitespace-pre-wrap text-white'>
               {searchStorageType === 'local' 
                 ? t('searching_storage.hints.local')
                   .replace('{lastUpdate}', 
-                    formatRelative(searchStorageLastUpdate as Date, new Date(), { 
+                    formatRelative(searchStorageLastUpdate as number, new Date(), { 
                       ...(i18n.language === 'ru' && { locale: Locales.ru })
                     }))
                 : t('searching_storage.hints.remotely')}

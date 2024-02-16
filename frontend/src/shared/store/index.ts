@@ -5,6 +5,12 @@ export const store = configureStore({
   reducer: {
     searchStorage: searchStorageReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActionPaths: ['payload.updatedAt']
+      },
+    }),
 })
 
 export type RootState = ReturnType<typeof store.getState>

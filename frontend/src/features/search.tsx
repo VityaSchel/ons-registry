@@ -169,7 +169,7 @@ export function Search() {
 
     const promise = new Promise<OnsRecord[] | null>(resolve => {
       fetchRecord(
-        process.env.NEXT_PUBLIC_API_URL + '/session/' + searchQuery, 
+        searchQuery, 
         { signal: abortController.signal }
       )
         .then(result => {
