@@ -1,7 +1,7 @@
 import { uint8arrayToHex, uint8arrayToBase64, hexToUint8array } from '@/shared/utils'
 import blake2 from 'blake2b'
 import sodium from 'libsodium-wrappers'
-import argon2 from 'argon2-browser'
+// import argon2 from 'argon2-browser'
 
 export async function hash(input: string) {
   const enc = new TextEncoder()
@@ -10,9 +10,9 @@ export async function hash(input: string) {
     .digest('binary'))
 }
 
-const crypto_pwhash_SALTBYTES = 16
-const crypto_pwhash_MEMLIMIT_MODERATE = 268435456
-const crypto_pwhash_OPSLIMIT_MODERATE = 3
+// const crypto_pwhash_SALTBYTES = 16
+// const crypto_pwhash_MEMLIMIT_MODERATE = 268435456
+// const crypto_pwhash_OPSLIMIT_MODERATE = 3
 
 const ED25519_PUBLIC_KEY_LENGTH = 32
 const SESSION_PUBLIC_KEY_BINARY_LENGTH = 1 + ED25519_PUBLIC_KEY_LENGTH
@@ -47,7 +47,7 @@ async function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2i
       .update(enc.encode(unhashedName))
       .digest()
   } else {
-    const OLD_ENC_SALT = new Uint8Array(crypto_pwhash_SALTBYTES)
+    // const OLD_ENC_SALT = new Uint8Array(crypto_pwhash_SALTBYTES)
     // const out = sodium.crypto_pwhash(
     //   sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     //   enc.encode(unhashedName),
@@ -56,16 +56,17 @@ async function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2i
     //   sodium.crypto_pwhash_MEMLIMIT_MODERATE,
     //   sodium.crypto_pwhash_ALG_ARGON2ID13
     // )
-    const out = await argon2.hash({
-      pass: unhashedName,
-      salt: OLD_ENC_SALT,
-      time: crypto_pwhash_OPSLIMIT_MODERATE,
-      mem: crypto_pwhash_MEMLIMIT_MODERATE,
-      hashLen: sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
-      parallelism: 1,
-      type: argon2.ArgonType.Argon2id
-    })
-    return out.hash
+    // const out = await argon2.hash({
+    //   pass: unhashedName,
+    //   salt: OLD_ENC_SALT,
+    //   time: crypto_pwhash_OPSLIMIT_MODERATE,
+    //   mem: crypto_pwhash_MEMLIMIT_MODERATE,
+    //   hashLen: sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
+    //   parallelism: 1,
+    //   type: argon2.ArgonType.Argon2id
+    // })
+    // return out.hash
+    return new Uint8Array()
   }
 }
 
