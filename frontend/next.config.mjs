@@ -44,6 +44,20 @@ export default withPWA({
   reloadOnOnline: false,
   disable: process.env.NODE_ENV !== 'production',
   mode: 'production',
+  exclude: [
+    ({ asset }) => {
+      if (
+        asset.name.startsWith('server/') ||
+        asset.name.match(/^((app-|^)build-manifest\.json|react-loadable-manifest\.json)$/)
+      ) {
+        return true
+      }
+      if (process.env.NODE_ENV !== 'production' && !asset.name.startsWith('static/runtime/')) {
+        return true
+      }
+      return false
+    }
+  ],
   runtimeCaching: workerCache,
   importScripts: ['worker-hashing.js']
 })(nextConfig)

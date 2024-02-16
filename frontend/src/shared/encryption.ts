@@ -1,7 +1,6 @@
 import { uint8arrayToHex, uint8arrayToBase64, hexToUint8array } from '@/shared/utils'
 import blake2 from 'blake2b'
 import sodium from 'libsodium-wrappers'
-// import argon2 from 'argon2-browser'
 
 export async function hash(input: string) {
   const enc = new TextEncoder()
@@ -9,10 +8,6 @@ export async function hash(input: string) {
     .update(enc.encode(input))
     .digest('binary'))
 }
-
-// const crypto_pwhash_SALTBYTES = 16
-// const crypto_pwhash_MEMLIMIT_MODERATE = 268435456
-// const crypto_pwhash_OPSLIMIT_MODERATE = 3
 
 const ED25519_PUBLIC_KEY_LENGTH = 32
 const SESSION_PUBLIC_KEY_BINARY_LENGTH = 1 + ED25519_PUBLIC_KEY_LENGTH
@@ -37,37 +32,35 @@ function decryptSecretboxWithKey(message: Uint8Array, nonce: Uint8Array, key: Ui
   return uint8arrayToHex(result)
 }
 
-async function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2id13') {
-  const enc = new TextEncoder()
-  if (algorithm === 'blake2b') {
-    const key = blake2(32)
-      .update(enc.encode(unhashedName))
-      .digest()
-    return blake2(32, key)
-      .update(enc.encode(unhashedName))
-      .digest()
-  } else {
-    // const OLD_ENC_SALT = new Uint8Array(crypto_pwhash_SALTBYTES)
-    // const out = sodium.crypto_pwhash(
-    //   sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
-    //   enc.encode(unhashedName),
-    //   OLD_ENC_SALT,
-    //   sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-    //   sodium.crypto_pwhash_MEMLIMIT_MODERATE,
-    //   sodium.crypto_pwhash_ALG_ARGON2ID13
-    // )
-    // const out = await argon2.hash({
-    //   pass: unhashedName,
-    //   salt: OLD_ENC_SALT,
-    //   time: crypto_pwhash_OPSLIMIT_MODERATE,
-    //   mem: crypto_pwhash_MEMLIMIT_MODERATE,
-    //   hashLen: sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
-    //   parallelism: 1,
-    //   type: argon2.ArgonType.Argon2id
-    // })
-    // return out.hash
-    return new Uint8Array()
-  }
+const hashChannel = new BroadcastChannel('sw-messages')
+function generateKey(unhashedName: string, algorithm: 'blake2b' | 'argon2id13') {
+  return new Promise<Uint8Array>(resolve => {
+    const enc = new TextEncoder()
+    if (algorithm === 'blake2b') {
+      const key = blake2(32)
+        .update(enc.encode(unhashedName))
+        .digest()
+      resolve(blake2(32, key)
+        .update(enc.encode(unhashedName))
+        .digest())
+    } else {
+      const sw = navigator.serviceWorker.controller
+      if (!sw) return console.error('Service Worker not ready')
+      sw.postMessage({ type: 'hash', plain: unhashedName })
+      const subscription = (event: MessageEvent<{ type: 'hash_result', result: import('argon2-browser').Argon2BrowserHashResult, plain: string }>) => {
+        if (
+          typeof event.data === 'object' 
+          && event.data.type === 'hash_result' 
+          && 'result' in event.data
+          && event.data.plain === unhashedName
+        ) {
+          hashChannel.removeEventListener('message', subscription)
+          resolve(event.data.result.hash)
+        }
+      }
+      hashChannel.addEventListener('message', subscription)
+    }
+  })
 }
 
 function splitEncryptedValue(encryptedValue: Uint8Array, legacyFormat: boolean): [Uint8Array, Uint8Array] {
@@ -82,12 +75,10 @@ function splitEncryptedValue(encryptedValue: Uint8Array, legacyFormat: boolean):
 }
 
 export async function decryptONSValue(value: string, unhashedName: string) {
-  console.time('startEncrypting')
   const encryptedValue = hexToUint8array(value)
   const legacyFormat = encryptedValue.length === SESSION_PUBLIC_KEY_BINARY_LENGTH + sodium.crypto_secretbox_MACBYTES
   try {
     const key = await generateKey(unhashedName, legacyFormat ? 'argon2id13' : 'blake2b')
-    console.log('key', uint8arrayToHex(key))
     const [message, nonce] = splitEncryptedValue(encryptedValue, legacyFormat)
     if (legacyFormat) {
       return decryptSecretboxWithKey(message, nonce, key)
