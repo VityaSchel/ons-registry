@@ -206,6 +206,19 @@ async function fixEncryptedValues() {
   }
 }
 
+async function fixSwitchedValues() {
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings WHERE LENGTH(owner_oxen) = 160')
+  for (const row of rows) {
+    console.log('Repairing', row.name_hash, row.owner_oxen, row.backup_owner_oxen)
+    await ons.run('UPDATE mappings SET owner = ?, owner_oxen = ? WHERE name_hash = ?', row.owner_oxen, row.owner, row.name_hash)
+  }
+  console.log('Repaired', rows.length, 'records')
+}
+
 switch(process.argv[2]) {
   case 'migrate':
     if (!process.argv[3]) {
@@ -232,7 +245,10 @@ switch(process.argv[2]) {
   case 'fix_encrypted_values':
     await fixEncryptedValues()
     break
+  case 'fix_switched_values':
+    await fixSwitchedValues()
+    break
   default:
-    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db>')
+    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n')
     process.exit(1)
 }
