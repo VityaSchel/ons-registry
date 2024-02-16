@@ -37,7 +37,8 @@
     "**/*.tsx",
     "next-i18next.config.js",
     ".next/types/**/*.ts",
-    "src/global.d.ts"
+    "src/global.d.ts",
+    "src/sodium.d.ts"
   ],
   "exclude": [
     "node_modules"
