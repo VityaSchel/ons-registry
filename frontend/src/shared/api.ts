@@ -15,7 +15,7 @@ async function awaitCacheInitialization() {
 }
 
 type FetchListResponse = { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
-export async function fetchList(options: { query?: string, offset?: number, limit?: number, type?: string, sort_by?: string, sort_dir?: string }, fetchOptions?: { signal: AbortSignal }) {
+export async function fetchList(options: { query?: string, offset?: number, limit?: number, owner?: string, type?: string, sort_by?: string, sort_dir?: string }, fetchOptions?: { signal: AbortSignal }) {
   await awaitCacheInitialization()
   const state = store.getState().searchStorage
   if (state.searchStorageType === 'local' && state.searchStorageData) {
@@ -31,6 +31,13 @@ export async function fetchList(options: { query?: string, offset?: number, limi
           }
         })
       })
+    }
+    if (options.owner) {
+      if (options.owner.length === 160) {
+        mappings = mappings.filter(mapping => mapping.owner.keypair === options.owner || mapping.backupOwner.keypair === options.owner)
+      } else {
+        mappings = mappings.filter(mapping => mapping.owner.oxen === options.owner || mapping.backupOwner.oxen === options.owner)
+      }
     }
     if (options.sort_by) {
       mappings.sort((a, b) => {
