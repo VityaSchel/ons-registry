@@ -79,5 +79,6 @@ export default withPWA({
       return false
     }
   ],
-  runtimeCaching: workerCache
+  runtimeCaching: workerCache,
+  importScripts: ['public/worker-hashing.js']
 })(nextConfig)
