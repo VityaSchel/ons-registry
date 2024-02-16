@@ -151,6 +151,7 @@ module.exports = [
       if (!isSameOrigin) return false
       const pathname = url.pathname
       if (pathname.startsWith('/api/') || url.origin === 'localhost') return false
+      if (pathname.includes('/buy')) return false
       return true
     },
     handler: 'NetworkFirst',

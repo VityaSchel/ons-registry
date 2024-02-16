@@ -9,7 +9,6 @@ export async function fetchFullListForLocalUse() {
       const cached = await cachedList.json() as { mappings: OnsRecord[], total: number }
       store.dispatch(setSearchStorageData(cached))
       const updatedAtDate = cachedList.headers.get('Date')
-      console.log(cachedList.headers)
       store.dispatch(setSearchStorageType({ type: 'local', updatedAt: updatedAtDate ? new Date(updatedAtDate) : new Date() }))
     } else {
       store.dispatch(setSearchStorageType({ type: 'remote', updatedAt: new Date() }))
