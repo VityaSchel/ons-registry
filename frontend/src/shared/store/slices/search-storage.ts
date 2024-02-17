@@ -25,22 +25,26 @@ export const counterSlice = createSlice({
     setSearchStorageData: (state, action: PayloadAction<{ mappings: OnsRecord[], total: number }>) => {
       state.searchStorageData = action.payload
     },
-    matchFound: (state, action: PayloadAction<{ hash: string, name: string }>) => {
+    matchFound: (state, action: PayloadAction<{ hash: string, name: string, decryptedMappings: Map<string, string> }>) => {
+      fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + action.payload.name)
+        .catch(e => console.error('Failed to cache match to server', e))
       if(state.searchStorageData) {
         const mappings = state.searchStorageData.mappings.filter(mapping => mapping.nameHash === action.payload.hash)
         mappings.forEach(mapping => mapping.name = action.payload.name)
-      }
-      const body = JSON.stringify(state.searchStorageData)
-      caches.open('ons-api-cache')
-        .then(cache => {
-          const url = process.env.NEXT_PUBLIC_API_URL + '/list?limit=all'
-          cache.match(url)
-            .then(existing => {
-              const request = new Response(body, { headers: existing?.headers })
-              cache.put(url, request)
-            })
+        Array.from(action.payload.decryptedMappings.entries()).forEach(([encryptedValue, decryptedValue]) => {
+          mappings.find(mapping => mapping.sessionIdEncrypted === encryptedValue)!.sessionId = decryptedValue
         })
-      fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + action.payload.name)
+        const body = JSON.stringify(state.searchStorageData)
+        caches.open('ons-api-cache')
+          .then(cache => {
+            const url = process.env.NEXT_PUBLIC_API_URL + '/list?limit=all'
+            cache.match(url)
+              .then(existing => {
+                const request = new Response(body, { headers: existing?.headers })
+                cache.put(url, request)
+              })
+          })
+      }
     }
   }
 })

@@ -26,6 +26,7 @@ async function fetchAndCacheData(url: string) {
     || navigator.mozConnection
     || navigator.webkitConnection
   const shouldFetch =
+    window.localStorage.getItem('disableCache') !== 'true' &&
     connection &&
     !connection.saveData &&
     connection.downlink !== undefined && 

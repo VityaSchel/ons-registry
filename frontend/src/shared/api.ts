@@ -1,4 +1,4 @@
-import { hash } from '@/shared/encryption'
+import { decryptONSValue, hash } from '@/shared/encryption'
 import { OnsRecord } from '@/shared/model/ons-record'
 import { store } from '@/shared/store'
 import { matchFound } from '@/shared/store/slices/search-storage'
@@ -60,6 +60,9 @@ export async function fetchList(options: { query?: string, offset?: number, limi
   } else {
     return await fetch(process.env.NEXT_PUBLIC_API_URL + '/list?' + new URLSearchParams({
       limit: String(options.limit),
+      ...(options.offset && { offset: String(options.offset) }),
+      ...(options.query && { query: options.query }),
+      ...(options.owner && { owner: options.owner }),
       ...(options.type && { type: options.type }),
       ...(options.sort_by && { sort_by: options.sort_by }),
       ...(options.sort_dir && { sort_dir: options.sort_dir })
@@ -81,7 +84,22 @@ export async function fetchRecord(name: string, fetchOptions?: { signal: AbortSi
       if(mappings.length > 0) {
         console.log('New match found :O', mappings)
         mappings = mappings.map(r => ({ ...r, name }))
-        store.dispatch(matchFound({ hash: hashedName, name }))
+        const encryptedMappings = mappings
+          .filter(r => r.sessionIdEncrypted)
+          .map(r => r.sessionIdEncrypted as string)
+        const decryptedMappings = new Map<string, string>()
+        for (const encryptedValue of encryptedMappings) {
+          const decryptedValue = await decryptONSValue(encryptedValue, name)
+          if (decryptedValue) {
+            decryptedMappings.set(encryptedValue, decryptedValue)
+          }
+        }
+        store.dispatch(matchFound({ hash: hashedName, name, decryptedMappings }))
+        mappings = mappings.map(r => ({ 
+          ...r, 
+          name, 
+          sessionId: decryptedMappings.get(r.sessionIdEncrypted as string) || null
+        }))
       }
     }
     return {

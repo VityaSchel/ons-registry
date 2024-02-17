@@ -119,7 +119,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
     {
       accessorKey: 'owner',
       header: () => (
-        <div className='flex justify-between items-center w-full'>
+        <div className='flex justify-between items-center w-full gap-2'>
           <span>{t('ons_record.owner.label')}</span>
           <Tabs
             value={ownerDisplay}

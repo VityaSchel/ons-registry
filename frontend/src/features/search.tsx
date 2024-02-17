@@ -10,6 +10,7 @@ import { Input } from '@/features/input'
 import { BuyNamesButton } from '@/features/buy-names-button'
 import { SearchingStorageType } from '@/features/searching-storage-type'
 import { fetchList, fetchRecord } from '@/shared/api'
+import { LoadingIndicator } from '@/features/loading-indicator'
 
 export function Search() {
   const { t, i18n } = useTranslation('common')
@@ -18,6 +19,7 @@ export function Search() {
   const [resultsForQuery, setResultsForQuery] = React.useState('')
   const [searchQuery, setSearchQuery] = React.useState('')
   const [exactResults, setExactResults] = React.useState<null | OnsRecord[]>(null)
+  const [loadingExactSearchResults, setLoadingExactSearchResults] = React.useState(false)
   const [recentOns, setRecentOns] = React.useState<null | OnsRecord[]>(null)
   const [total, setTotal] = React.useState<null | number>(null)
   const [recentOnsTotal, setRecentOnsTotal] = React.useState<null | number>(null)
@@ -62,6 +64,9 @@ export function Search() {
             exactSearchResults.promise
               .then(mappings => {
                 setExactResults(mappings)
+              })
+              .finally(() => {
+                setLoadingExactSearchResults(false)
               })
             Promise.all([searchResults.promise, exactSearchResults.promise])
               .then(() => {
@@ -166,7 +171,8 @@ export function Search() {
 
   const exactSearch = (searchQuery: string) => {
     const abortController = new AbortController()
-
+    
+    setLoadingExactSearchResults(true)
     const promise = new Promise<OnsRecord[] | null>(resolve => {
       fetchRecord(
         searchQuery, 
@@ -307,8 +313,13 @@ export function Search() {
           </span>}
         </>)}
       </div>
-      <div className='w-full flex flex-col mt-6 gap-1'>
-        <SearchingStorageType />
+      <div className='w-full flex flex-col mt-6 gap-2'>
+        <div className='flex justify-between items-center h-6'>
+          <LoadingIndicator loading={showRecent
+            ? recentOns === null
+            : searchResults === null || loadingExactSearchResults} />
+          <SearchingStorageType />
+        </div>
         <div className='flex flex-col gap-6 items-center'>
           <ONSRecordsTable
             data={showRecent ? recentOns : searchResults}

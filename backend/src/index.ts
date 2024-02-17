@@ -199,9 +199,7 @@ fastify.get('/list', async (request, reply) => {
 
   const response = {
     ok: true,
-    mappings: onsRecords
-    // TODO: rEmove
-      .map(r => r.name === 'hloth' ? ({ ...r, name: null }) : r),
+    mappings: onsRecords,
     total: total?.['COUNT(*)'] ?? 0,
   }
 
@@ -234,7 +232,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
       oxen: mapping.backup_owner_oxen
     },
     sessionId: unhashedName ? sessionID : null,
-    ...(sessionID === null && { sessionIdEncrypted: mapping.value }),
+    sessionIdEncrypted: mapping.value,
     transactionId: mapping.transaction_id,
     updatedAtBlock: mapping.updated_at_block,
     expiresAtBlock: mapping.expires_at_block,
