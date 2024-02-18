@@ -1,0 +1,35 @@
+import argon2 from 'argon2-browser'
+// import { BackgroundSyncPlugin } from 'workbox-background-sync'
+
+const crypto_pwhash_SALTBYTES = 16
+const crypto_pwhash_MEMLIMIT_MODERATE = 268435456
+const crypto_pwhash_OPSLIMIT_MODERATE = 3
+const crypto_aead_xchacha20poly1305_ietf_KEYBYTES = 32
+
+const channel = new BroadcastChannel('sw-messages')
+// const bgSync = new BackgroundSyncPlugin('sync-matches', {
+//   maxRetentionTime: 24 * 60 * 7
+// })
+
+self.addEventListener('message', async event => {
+  if(typeof event.data === 'object') {
+    if (event.data.type === 'hash' && 'plain' in event.data) {
+      const OLD_ENC_SALT = new Uint8Array(crypto_pwhash_SALTBYTES)
+      const result = await argon2.hash({
+        pass: event.data.plain,
+        salt: OLD_ENC_SALT,
+        time: crypto_pwhash_OPSLIMIT_MODERATE,
+        mem: crypto_pwhash_MEMLIMIT_MODERATE / 1024,
+        hashLen: crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
+        parallelism: 1,
+        type: argon2.ArgonType.Argon2id
+      })
+      channel.postMessage({ type: 'hash_result', result, plain: event.data.plain })
+    }/* else if(event.data.type === 'sync_match' && 'name' in event.data && 'api_url' in event.data) {
+      const request = new Request(event.data.api_url + '/session/' + event.data.name)
+      if (bgSync.fetchDidFail) {
+        bgSync.fetchDidFail({ request })
+      }
+    }*/
+  }
+})

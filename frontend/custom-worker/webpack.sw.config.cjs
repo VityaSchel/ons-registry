@@ -8,7 +8,7 @@ const config = {
   entry: __dirname + '/index.ts',
   output: {
     path: path.resolve(__dirname, '../public'),
-    filename: 'worker-hashing.js'
+    filename: 'custom-worker.js'
   },
   module: {
     rules: [

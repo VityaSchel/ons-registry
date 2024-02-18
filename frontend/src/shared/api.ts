@@ -112,3 +112,14 @@ export async function fetchRecord(name: string, fetchOptions?: { signal: AbortSi
       .then(res => res.json()) as FetchRecordResponse
   }
 }
+
+export async function cacheMatch(name: string) {
+  try {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + name + '?cache')
+    if(!response.ok) {
+      throw new Error(await response.text())
+    }
+  } catch (e) {
+    console.error('Failed to cache match to server', e)
+  }
+}

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../index'
 import { OnsRecord } from '@/shared/model/ons-record'
+import { cacheMatch } from '@/shared/api'
 
 interface SearchStorageState {
   searchStorageType: 'initializing' | 'local' | 'remote'
@@ -26,8 +27,7 @@ export const counterSlice = createSlice({
       state.searchStorageData = action.payload
     },
     matchFound: (state, action: PayloadAction<{ hash: string, name: string, decryptedMappings: Map<string, string> }>) => {
-      fetch(process.env.NEXT_PUBLIC_API_URL + '/session/' + action.payload.name)
-        .catch(e => console.error('Failed to cache match to server', e))
+      cacheMatch(action.payload.name)
       if(state.searchStorageData) {
         const mappings = state.searchStorageData.mappings.filter(mapping => mapping.nameHash === action.payload.hash)
         mappings.forEach(mapping => mapping.name = action.payload.name)

@@ -39,6 +39,7 @@ const nextConfig = {
 
 export default withPWA({
   dest: 'public',
+  register: true,
   cacheStartUrl: true,
   dynamicStartUrl: false,
   reloadOnOnline: false,
@@ -59,5 +60,5 @@ export default withPWA({
     }
   ],
   runtimeCaching: workerCache,
-  importScripts: ['worker-hashing.js']
+  importScripts: ['custom-worker.js']
 })(nextConfig)

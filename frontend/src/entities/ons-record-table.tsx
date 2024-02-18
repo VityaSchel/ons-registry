@@ -254,9 +254,14 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
           ) : (
             table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
-                const isExactMatch = Boolean(row.getValue('name')
+                const rowName = row.getValue('name') as string | null
+                const isExactMatch = Boolean(rowName
                   && exactResults
-                  && exactResults.some(r => r.name === row.getValue('name')))
+                  && exactResults.some(r => (
+                    r.name && 
+                    rowName && 
+                    r.name.toLowerCase() === rowName.toLowerCase()
+                  )))
                 return (
                   <TableRow
                     key={row.id}

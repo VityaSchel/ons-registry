@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && npm run worker",
-    "worker": "webpack --config hash-worker/webpack.sw.config.cjs",
+    "worker": "webpack --config custom-worker/webpack.sw.config.cjs",
     "start": "next start",
     "lint": "next lint"
   },

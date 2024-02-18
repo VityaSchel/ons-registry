@@ -178,5 +178,21 @@ module.exports = [
   //     },
   //     networkTimeoutSeconds: 10
   //   }
-  // }
+  // },
+  {
+    urlPattern: ({ url }) => {
+      const pathname = url.pathname
+      if (!pathname.startsWith('/api/session/')) return false
+      return new URLSearchParams(url.search).has('cache')
+    },
+    handler: 'NetworkOnly',
+    options: {
+      backgroundSync: {
+        name: 'cache-matches',
+        options: {
+          maxRetentionTime: 24 * 60 * 7
+        }
+      }
+    }
+  }
 ]
