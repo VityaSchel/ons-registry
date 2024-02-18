@@ -73,7 +73,8 @@ export async function fetchList(options: { query?: string, offset?: number, limi
 
 type FetchRecordResponse = { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
 
-export async function fetchRecord(name: string, fetchOptions?: { signal: AbortSignal }) {
+export async function fetchRecord(onsName: string, fetchOptions?: { signal: AbortSignal }) {
+  const name = onsName.toLowerCase()
   await awaitCacheInitialization()
   const state = store.getState().searchStorage
   if (state.searchStorageType === 'local' && state.searchStorageData) {
