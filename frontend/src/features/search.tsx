@@ -300,8 +300,8 @@ export function Search() {
           </Link>
         </div>
       </div>
-      <div className='mt-4 h-2 w-full text-muted-foreground text-sm md:text-base'>
-        {Boolean(searchQuery) && mode === 'by_author' && (<>
+      <div className='mt-4 h-2 w-[1200px] max-w-full text-muted-foreground text-sm md:text-base'>
+        {Boolean(searchQuery) && isValidQuery && mode === 'by_author' && (<>
           {Boolean(total) && <span className='mr-2'>
             {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}.
           </span>}
