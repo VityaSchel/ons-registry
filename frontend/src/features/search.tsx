@@ -11,9 +11,10 @@ import { BuyNamesButton } from '@/features/buy-names-button'
 import { SearchingStorageType } from '@/features/searching-storage-type'
 import { fetchList, fetchRecord } from '@/shared/api'
 import { LoadingIndicator } from '@/features/loading-indicator'
+import { TotalMoneySpent } from '@/features/total-money-spent'
 
 export function Search() {
-  const { t, i18n } = useTranslation('common')
+  const { t } = useTranslation('common')
   const [mode, setMode] = React.useState<'names' | 'by_author'>('names')
   const [searchResults, setSearchResults] = React.useState<null | OnsRecord[]>(null)
   const [resultsForQuery, setResultsForQuery] = React.useState('')
@@ -299,18 +300,14 @@ export function Search() {
           </Link>
         </div>
       </div>
-      <div className='mt-4 h-2 w-full flex gap-5 text-muted-foreground text-sm md:text-base'>
+      <div className='mt-4 h-2 w-full text-muted-foreground text-sm md:text-base'>
         {Boolean(searchQuery) && mode === 'by_author' && (<>
-          {Boolean(total) && <span>
-            {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}
+          {Boolean(total) && <span className='mr-2'>
+            {t('statistics.this_person_owns').replace('{total}', String(total ?? 0))}.
           </span>}
-          {Boolean(total) && total && total > 0 && <span>
-            {t('statistics.this_person_money').replace('{totalSum}', String(total * 7 ?? 0))}
-            {' '}{i18n.language === 'ru' 
-              ? <>(≈{(total * 7 * 60 * 0.8).toFixed(2)}RUB)</>
-              : <>(≈{(total * 7 * 0.8).toFixed(2)}USD)</>
-            }
-          </span>}
+          {Boolean(total) && total && total > 0 && (
+            <TotalMoneySpent total={total} owner={searchQuery} />
+          )}
         </>)}
       </div>
       <div className='w-full flex flex-col mt-6 gap-2'>

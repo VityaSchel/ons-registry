@@ -15,6 +15,7 @@ import { PurchaseCreateInvoice } from './purchase/invoice.js'
 import { PurchaseCallback } from './purchase/callback.js'
 import { PurchaseStatus } from './purchase/status.js'
 import crypto from 'crypto'
+import { getMoneySpent } from './price.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -242,6 +243,21 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   }
 }
 
+fastify.get('/cost', async (request, reply) => {
+  const query = await z.object({
+    owner: z.string()
+      .min(1)
+      .max(160),
+    fiat: z.enum(['rub', 'usd']),
+  }).safeParseAsync(request.query)
+  if (!query.success) {
+    reply.status(400).send({ ok: false, error: 'INVALID_QUERY' })
+    return
+  }
+
+  const amount = await getMoneySpent(query.data.fiat, query.data.owner)
+  reply.send({ ok: true, amount })
+})
 
 fastify.get('/purchase/promo/:name', PurchasePromoGet)
 fastify.post('/purchase/invoice', PurchaseCreateInvoice)

@@ -51,7 +51,9 @@
   },
   "statistics": {
     "this_person_owns": "This person owns {total} ONS",
-    "this_person_money": "Total cost of them is {totalSum} OXEN"
+    "this_person_money": "Total cost of them including the exchange rate at the times of purchases: {totalSum}",
+    "this_person_money_explanation": "To calculate this number, we used historical data from the CoinGecko API about the price of OXEN and found the nearest data points to the datetime of purchase (the price is recorded hourly) and summed the cost of 7 OXEN for the selected fiat currency at the time of purchase. Simply put, the number presented is the minimum amount of money that the address owner spent on purchasing names. This number does not take into account records of owner changes (update), backup owners of records (backup_owner) and transaction fees.",
+    "connect_to_estimate_money": "Connect to the internet to estimate how much money the owner spent on their ONS names based on exchange rates at purchases times."
   },
   "copy": "Copy",
   "details": {

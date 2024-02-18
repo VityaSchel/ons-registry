@@ -38,3 +38,9 @@ export type OnsRecord = {
 }
 
 export type Db = Database<sqlite3.Database, sqlite3.Statement>
+
+export type Price = {
+  fiat: 'rub' | 'usd'
+  price: number
+  timestamp: number
+}

@@ -62,3 +62,17 @@ async function checkIfExists(ons: Db, nameHash: string, paymentId: string) {
     paymentId
   ])
 }
+
+export async function appendPrices(ons: Db, fiat: 'rub' | 'usd', prices: [number, number][]) {
+  console.log('Appending', prices.length, 'prices for', fiat)
+  for (let i = 0; i < prices.length; i++) {
+    const price = prices[i]
+    console.log(`[${i + 1}/${prices.length}] ${Math.round(i / prices.length * 100) + '%'}`)
+    await ons.run('INSERT INTO prices (fiat, price, timestamp) VALUES (:fiat, :price, :timestamp)', {
+      ':fiat': fiat,
+      ':price': price[1],
+      ':timestamp': price[0]
+    })
+  }
+  console.log('Finished adding', prices.length, 'prices for', fiat)
+}

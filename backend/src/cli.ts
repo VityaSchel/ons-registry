@@ -1,3 +1,4 @@
+import './env.js'
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 import { OnsRecord } from './model.js'
@@ -9,6 +10,7 @@ import { decryptONSValue } from './encryption.js'
 import { OnsMapping } from './schema.js'
 import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
 import fs from 'fs/promises'
+import { collectPrices, getMoneySpent } from './price.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 const pathToOnsDb = __dirname + '../db/ons.db'
@@ -277,6 +279,32 @@ switch(process.argv[2]) {
     break
   case 'add_blocks_dates':
     await addBlocksDates(process.argv[3])
+    break
+  case 'collect_prices':
+    if (process.argv[3] === undefined) {
+      console.error('Usage: node out/cli.js collect_prices <rub | usd> [starting from unix timestamp]')
+      process.exit(1)
+    }
+    await collectPrices(
+      Object.fromEntries(
+        process.argv[3]
+          .split(',')
+          .map(p => [p, true])
+      ), 
+      process.argv[4] ? Number(process.argv[4]) : undefined,
+      process.argv[5] ? Number(process.argv[5]) : undefined
+    )
+    break
+  case 'get_money_spent':
+    if(process.argv[3] === undefined || process.argv[4] === undefined) {
+      console.error('Usage: node out/cli.js get_money_spent <rub | usd> <owner>')
+      process.exit(1)
+    }
+    if(process.argv[3] !== 'rub' && process.argv[3] !== 'usd') {
+      console.error('Usage: node out/cli.js get_money_spent <rub | usd> <owner>')
+      process.exit(1)
+    }
+    console.log('Money spent:', await getMoneySpent(process.argv[3], process.argv[4]))
     break
   default:
     console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n | node out/cli.js add_blocks_dates <path_to_blocks_mappings.db>')

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { ons } from './index.js'
 import { BlockHeader, OnsExtra, OnsRecord } from './model.js'
 import { appendOnsRecords } from './db.js'
+import { updateHistoricalOxenPrices } from './price.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -130,7 +131,10 @@ export async function sync() {
       if(dryRun) {
         console.log(onsRelatedTransactions)
       } else {
-        await appendOnsRecords(ons, onsRelatedTransactions)
+        if (onsRelatedTransactions.length > 0) {
+          await updateHistoricalOxenPrices()
+          await appendOnsRecords(ons, onsRelatedTransactions)
+        }
       }
     }
 
