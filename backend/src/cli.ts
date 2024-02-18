@@ -8,6 +8,7 @@ import { unhash } from './utils.js'
 import { decryptONSValue } from './encryption.js'
 import { OnsMapping } from './schema.js'
 import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
+import fs from 'fs/promises'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 const pathToOnsDb = __dirname + '../db/ons.db'
@@ -35,6 +36,7 @@ async function migrateOnsDb(pathToOldDb: string) {
       transaction_id: row.txid.toString('hex'),
       updated_at_block: row.update_height,
       expires_at_block: row.expiration_height ?? undefined,
+      date: 0,
     } satisfies OnsRecord
     onsRecords.push(onsRecord)
   }
@@ -219,6 +221,31 @@ async function fixSwitchedValues() {
   console.log('Repaired', rows.length, 'records')
 }
 
+async function addBlocksDates(blocksMappingsPath: string) {
+  const mappings = await fs.readFile(blocksMappingsPath, 'utf-8')
+  const ons = await open({
+    filename: __dirname + '../db/ons.db',
+    driver: sqlite3.Database
+  })
+  const blocks = JSON.parse(mappings)
+  const rows = await ons.all<OnsMapping[]>('SELECT * FROM mappings')
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    console.log(i+'/'+rows.length, Math.round(i / rows.length * 100) + '%')
+    if (!row.updated_at_block) {
+      console.warn('Skipping', row.name_hash, 'because it has no updated_at_block')
+      continue
+    }
+    const timestamp = blocks[row.updated_at_block]
+    if(!timestamp) {
+      console.warn('Skipping', row.updated_at_block, 'because it has no timestamp')
+      continue
+    }
+    await ons.run('UPDATE mappings SET block_created_at = ? WHERE updated_at_block = ?', timestamp, row.updated_at_block)
+  }
+  console.log('Repaired', rows.length, 'records')
+}
+
 switch(process.argv[2]) {
   case 'migrate':
     if (!process.argv[3]) {
@@ -248,7 +275,10 @@ switch(process.argv[2]) {
   case 'fix_switched_values':
     await fixSwitchedValues()
     break
+  case 'add_blocks_dates':
+    await addBlocksDates(process.argv[3])
+    break
   default:
-    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n')
+    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n | node out/cli.js add_blocks_dates <path_to_blocks_mappings.db>')
     process.exit(1)
 }

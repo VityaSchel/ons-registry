@@ -3,3 +3,7 @@ body {
   // overflow-x: hidden;
   overscroll-behavior: none;
 }
+
+* {
+  font-variant-ligatures: no-contextual;
+}

@@ -222,6 +222,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
   const sessionID = unhashedName ? mapping.decrypted_value : null
   return {
     name: unhashedName,
+    type: mapping.type,
     nameHash: mapping.name_hash,
     owner: {
       keypair: mapping.owner,
@@ -237,6 +238,7 @@ const mapOnsRecord = async (mapping: OnsMapping) => {
     updatedAtBlock: mapping.updated_at_block,
     expiresAtBlock: mapping.expires_at_block,
     action: mapping.action,
+    blockCreatedAt: mapping.block_created_at
   }
 }
 

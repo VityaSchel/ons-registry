@@ -1,5 +1,4 @@
 import { OnsRecord } from '@/shared/model/ons-record'
-import { blockToDate } from '@/shared/utils'
 import { ArrowUpDown } from 'lucide-react'
 import { LuKeySquare } from 'react-icons/lu'
 import OxenLogo from '@/assets/oxen-logo.svg'
@@ -150,7 +149,7 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       size: 100,
     },
     {
-      accessorKey: 'updatedAtBlock',
+      accessorKey: 'blockCreatedAt',
       header: ({ column }) => {
         return (
           <Button
@@ -163,16 +162,16 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
         )
       },
       cell: ({ row }) => {
-        const updatedAtBlock = row.getValue('updatedAtBlock') as number
-        const content = updatedAtBlock >= 650000
+        const blockCreatedAt = row.getValue('blockCreatedAt') as number | null
+        const content = blockCreatedAt !== null
           ? Intl.DateTimeFormat([language], {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
             minute: 'numeric',
-          }).format(blockToDate(updatedAtBlock) as Date)
-          : '[Before 24 oct 2020]'
+          }).format(blockCreatedAt * 1000)
+          : t('unknown')
         // className='hidden md:block'
         return (<>
           <span>{content}</span>

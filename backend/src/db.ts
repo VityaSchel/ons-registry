@@ -35,7 +35,7 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
       backupOwners = generateOwners(record.backup_owner)
     }
     await ons.run(
-      'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action) VALUES (:name_hash, :unhashed_name, :owner, :owner_oxen, :backup_owner, :backup_owner_oxen, :type, :value, :decrypted_value, :transaction_id, :updated_at_block, :expires_at_block, :action)', {
+      'INSERT INTO mappings (name_hash, unhashed_name, owner, owner_oxen, backup_owner, backup_owner_oxen, type, value, decrypted_value, transaction_id, updated_at_block, expires_at_block, action, block_created_at) VALUES (:name_hash, :unhashed_name, :owner, :owner_oxen, :backup_owner, :backup_owner_oxen, :type, :value, :decrypted_value, :transaction_id, :updated_at_block, :expires_at_block, :action, :block_created_at)', {
         ':name_hash': record.name_hash,
         ':unhashed_name': unhashedName,
         ':owner': owners.keypair,
@@ -48,7 +48,8 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
         ':transaction_id': record.transaction_id,
         ':updated_at_block': record.updated_at_block,
         ':expires_at_block': record.expires_at_block,
-        ':action': record.action
+        ':action': record.action,
+        ':block_created_at': record.date
       }
     )
   }

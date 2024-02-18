@@ -34,6 +34,7 @@ export type OnsRecord = {
   expires_at_block?: number
   action?: 'update' | 'buy' | 'renew'
   payment_id?: string
+  date: number
 }
 
 export type Db = Database<sqlite3.Database, sqlite3.Statement>

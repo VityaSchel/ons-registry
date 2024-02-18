@@ -81,7 +81,12 @@ export async function sync() {
     console.log(`Found ${transactions.length} transactions`)
 
     if (transactions.length > 0) {
-      const transactionsInfo: { extra: object, tx_hash: string, block_height: number }[] = []
+      const transactionsInfo: { 
+        extra: object, 
+        tx_hash: string, 
+        block_height: number, 
+        block_timestamp: number 
+      }[] = []
       for(let txI = 0; txI < transactions.length; txI++) {
         const tx = transactions[txI]
         const transactionsResponse = await fetch('http://public-eu.optf.ngo:22023/get_transactions', {
@@ -117,7 +122,8 @@ export async function sync() {
             ...('blocks' in extra && typeof extra.blocks === 'number' && { 
               expires_at_block: tx.block_height + extra.blocks 
             }),
-            payment_id: extra.payment_id
+            payment_id: extra.payment_id,
+            date: tx.block_timestamp
           }
         })
       console.log('Filtered', onsRelatedTransactions.length, 'transactions related to ONS')

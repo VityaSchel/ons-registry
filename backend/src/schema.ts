@@ -12,4 +12,5 @@ export type OnsMapping = {
   action: 'create' | 'update' | 'delete' | null
   updated_at_block: number
   expires_at_block: number
+  block_created_at: number
 }
