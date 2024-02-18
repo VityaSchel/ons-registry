@@ -60,5 +60,6 @@ export default withPWA({
     }
   ],
   runtimeCaching: workerCache,
-  importScripts: ['custom-worker.js']
+  importScripts: ['custom-worker.js'],
+  skipWaiting: true
 })(nextConfig)
