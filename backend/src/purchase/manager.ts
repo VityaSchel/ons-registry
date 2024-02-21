@@ -40,7 +40,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     await sendNotificationToAdmin(`⚠️ PURCHASE FAILED: NO WALLETS LEFT ⚠️ ${name} (${sessionID}) invId: ${invoiceUUID}`)
     return
   } else {
-    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}), wallets left: ${wallets.length} | invId: ${invoiceUUID}`)
+    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}), wallets left: ${wallets.length - 1} | invId: ${invoiceUUID}`)
   }
   let wallet = path.basename(_.sample(wallets) as string).slice(0, -'.keys'.length)
   if (!dryRun) {

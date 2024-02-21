@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { RadioGroup, RadioGroupItem } from '@/shared/shadcn/ui/radio-group'
 import { Label } from '@/shared/shadcn/ui/label'
+import TrustpilotLogo from '@/assets/trustpilot-logo.svg'
 
 export function BuyForm() {
   const { name } = useRouter().query
@@ -259,6 +260,12 @@ export function BuyForm() {
           </Formik>
         </div>
         <div className='flex flex-col gap-2 flex-1 mt-12'>
+          <div className='flex mb-2'>
+            <a href='https://www.trustpilot.com/review/ons.sessionbots.directory' target='_blank' rel='nofollow noreferrer' className='flex gap-2 bg-white border rounded-[2px] border-[#00b67a] p-[15px] text-black'>
+              <span>{t('trustpilot')}</span>
+              <TrustpilotLogo className='w-[80px]' />
+            </a>
+          </div>
           <Faq title={t('faq.about_ons.title')} content={t('faq.about_ons.description')} />
           <Faq title={t('faq.purchase.title')} content={t('faq.purchase.description')} />
           <Faq title={t('faq.contacts.title')} content={t('faq.contacts.description')} />
