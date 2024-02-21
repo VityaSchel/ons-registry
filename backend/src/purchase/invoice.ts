@@ -44,7 +44,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     language: z.enum(['ru', 'en']),
     owner: z.string()
       .length(95)
-      .regex(/^[a-zA-Z]+$/)
+      .regex(/^[a-zA-Z0-9]+$/)
       .optional(),
     email: z.string()
       .email()
