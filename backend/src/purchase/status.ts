@@ -10,6 +10,7 @@ export type Invoice = {
   currency: 'rub' | 'usd'
   price: string
   created_at: number
+  owner?: string
   status: 'created' | 'processing' | 'canceled' | 'success' | 'errored'
 }
 

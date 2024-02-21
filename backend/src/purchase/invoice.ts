@@ -44,7 +44,8 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     language: z.enum(['ru', 'en']),
     owner: z.string()
       .length(95)
-      .regex(/^[a-zA-Z]+$/),
+      .regex(/^[a-zA-Z]+$/)
+      .optional(),
     email: z.string()
       .email()
       .optional()
@@ -80,19 +81,19 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   }
 
   const invoiceUUID = randomUUID()
-  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-    invoiceUUID, 
-    name, 
-    body.data.sessionID, 
-    body.data.coupon ?? null, 
-    body.data.currency, 
-    price[body.data.currency], 
-    Date.now(), 
-    'created', 
-    body.data.email ?? null, 
-    body.data.language,
-    body.data.owner
-  ])
+  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language, owner) VALUES (:uuid, :name, :session_id, :coupon, :currency, :price, :created_at, :status, :email, :language, :owner)', {
+    ':uuid': invoiceUUID,
+    ':name': name,
+    ':session_id': body.data.sessionID,
+    ':coupon': body.data.coupon ?? null,
+    ':currency': body.data.currency,
+    ':price': price[body.data.currency],
+    ':created_at': Date.now(),
+    ':status': 'created',
+    ':email': body.data.email ?? null, 
+    ':language': body.data.language,
+    ':owner': body.data.owner,
+  })
   const redirectUrl = `${
     process.env.YOOKASSA_API_TOKEN.startsWith('test')
       ? 'http://localhost:6802'
@@ -104,7 +105,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
       ok: true, 
       redirect: redirectUrl
     })
-    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, { email: body.data.email, owner: body.data.email }, true)
+    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, { email: body.data.email }, true)
     return 
   }
 
