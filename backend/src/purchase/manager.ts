@@ -6,9 +6,9 @@ import { glob } from 'glob'
 import fs from 'fs/promises'
 import _ from 'lodash'
 import tcpPortUsed from 'tcp-port-used'
-import { MailtrapClient } from 'mailtrap'
 import path from 'path'
 import basicAuth from 'basic-authorization-header'
+import { sendEmail } from '../email.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -167,38 +167,30 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
 }
 
-
-const TOKEN = process.env.MAILTRAP_API_KEY
-if(!TOKEN) throw new Error('MAILTRAP_API_KEY not set')
-const ENDPOINT = 'https://send.api.mailtrap.io/'
-const client = new MailtrapClient({ endpoint: ENDPOINT, token: TOKEN })
-
 async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
   const sender = {
-    email: 'mailtrap@ons.sessionbots.directory',
+    email: 'purchases@ons.sessionbots.directory',
     name: 'ONS Registry',
   }
 
   try {
-    if(language === 'ru') {
-      await client.send({
+    if (language === 'ru') {
+      await sendEmail({
         from: sender,
         to: [{ email }],
         subject: 'Спасибо за покупку ONS имени в Session',
-        text: 'Поздравляем с покупкой имени! Ваше имя уже активно и вас уже можно найти по нему в Session (если вы еще не можете перейти по нему, подождите до 10 минут для регистрации в блокчейне). Если вы захотите управлять своим именем (например, привязать это имя к другому SessionID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту фразу: ' + seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне. Пожалуйста, имейте в виду, что мы никак не связаны с OXEN, Session и не можем управлять блокчейном, а также помочь с вопросами, связанными с этим. Наш сайт не поддерживает управление вашим именем после покупки.\n\nСпасибо за покупку и ждем вас снова!',
-        category: 'Purchase completed',
+        text: 'Поздравляем с покупкой имени! Ваше имя уже активно и вас уже можно найти по нему в Session (если вы еще не можете перейти по нему, подождите до 10 минут для регистрации в блокчейне). Если вы захотите управлять своим именем (например, привязать это имя к другому SessionID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту фразу: ' + seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне. Пожалуйста, имейте в виду, что мы никак не связаны с OXEN, Session и не можем управлять блокчейном, а также помочь с вопросами, связанными с этим. Наш сайт не поддерживает управление вашим именем после покупки.\n\nСпасибо за покупку и ждем вас снова!'
       })
     } else {
-      await client.send({
+      await sendEmail({
         from: sender,
         to: [{ email }],
         subject: 'Thank you for purchasing ONS name in Session',
-        text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!',
-        category: 'Purchase completed',
+        text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!'
       })
     }
-  } catch(e) {
-    console.error('Failed to send email', e) 
+  } catch (e) {
+    console.error('Failed to send email', e)
   }
 }
 

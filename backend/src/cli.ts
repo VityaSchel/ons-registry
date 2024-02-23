@@ -11,6 +11,7 @@ import { OnsMapping } from './schema.js'
 import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
 import fs from 'fs/promises'
 import { collectPrices, getMoneySpent } from './price.js'
+import { sendEmail } from './email.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 const pathToOnsDb = __dirname + '../db/ons.db'
@@ -305,6 +306,14 @@ switch(process.argv[2]) {
       process.exit(1)
     }
     console.log('Money spent:', await getMoneySpent(process.argv[3], process.argv[4]))
+    break
+  case 'send_test_email':
+    sendEmail({
+      from: { email: 'test@ons.sessionbots.directory', name: 'ONS Registry' },
+      to: [{ email: process.argv[3] }],
+      subject: 'Test email',
+      text: 'This is test email',
+    })
     break
   default:
     console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n | node out/cli.js add_blocks_dates <path_to_blocks_mappings.db>')
