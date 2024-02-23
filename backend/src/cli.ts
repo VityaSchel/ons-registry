@@ -308,7 +308,8 @@ switch(process.argv[2]) {
     console.log('Money spent:', await getMoneySpent(process.argv[3], process.argv[4]))
     break
   case 'send_test_email':
-    sendEmail({
+    console.log('Sending to', [{ email: process.argv[3] }])
+    await sendEmail({
       from: { email: 'test@ons.sessionbots.directory', name: 'ONS Registry' },
       to: [{ email: process.argv[3] }],
       subject: 'Test email',
