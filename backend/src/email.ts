@@ -26,7 +26,7 @@ export async function sendEmail({ from, to, subject, text }: {
 }) {
   const info = await transporter.sendMail({
     from: `"${from.name}" <${from.email}>`,
-    to: to.join(', '),
+    to: to.map(e => e.email).join(', '),
     subject: subject,
     text: text,
     dkim: {
