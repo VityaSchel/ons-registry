@@ -9,6 +9,7 @@ const transporter = nodemailer.createTransport({
   host: 'localhost',
   port: 25,
   secure: false,
+  name: 'ons.sessionbots.directory',
   auth: {
     user: 'ons',
     pass: process.env.SMTP_PASSWORD,
