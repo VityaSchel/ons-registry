@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   host: 'localhost',
   port: 25,
   secure: false,
-  name: 'ons.sessionbots.directory',
+  name: 'purchases.ons.sessionbots.directory',
   auth: {
     user: 'ons',
     pass: process.env.SMTP_PASSWORD,
@@ -31,7 +31,7 @@ export async function sendEmail({ from, to, subject, text }: {
     subject: subject,
     text: text,
     dkim: {
-      domainName: 'ons.sessionbots.directory',
+      domainName: 'purchases.ons.sessionbots.directory',
       keySelector: 'default',
       privateKey: await fs.readFile(__dirname + '../keys/dkim_private.pem', 'utf-8')
     }

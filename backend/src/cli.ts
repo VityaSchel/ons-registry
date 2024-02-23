@@ -310,7 +310,7 @@ switch(process.argv[2]) {
   case 'send_test_email':
     console.log('Sending to', [{ email: process.argv[3] }])
     await sendEmail({
-      from: { email: 'test@ons.sessionbots.directory', name: 'ONS Registry' },
+      from: { email: 'confirmation@purchases.ons.sessionbots.directory', name: 'ONS Registry' },
       to: [{ email: process.argv[3] }],
       subject: 'Test email',
       text: 'This is test email',

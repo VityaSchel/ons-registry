@@ -169,7 +169,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
 
 async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
   const sender = {
-    email: 'purchases@ons.sessionbots.directory',
+    email: 'confirmation@purchases.ons.sessionbots.directory',
     name: 'ONS Registry',
   }
 
