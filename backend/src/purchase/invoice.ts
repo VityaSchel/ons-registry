@@ -9,6 +9,7 @@ import { purchases } from './db.js'
 import { sendItem } from './manager.js'
 import { ons } from '../index.js'
 import { hash } from '../encryption.js'
+import { glob } from 'glob'
 
 export type Invoice = {
   uuid: string
@@ -26,7 +27,11 @@ export type Invoice = {
 
 const rateLimitsCreation = new Map<string, number[]>()
 export async function PurchaseCreateInvoice(request: FastifyRequest, reply: FastifyReply) {
-  return reply.status(400).send({ ok: false, error: 'Service unavailable :(' })
+  const walletDir = __dirname + '../../.oxen/'
+  const wallets = await glob(walletDir + 'wallet-*.keys')
+  if (wallets.length === 0) {
+    return reply.status(500).send({ ok: false, error: 'No wallets left. Please fill in your own OXEN wallet or contact @hlothdev in Telegram' })
+  }
 
   if (!process.env.YOOKASSA_API_TOKEN) throw new Error('YOOKASSA_API_TOKEN is not set')
 

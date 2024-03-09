@@ -40,7 +40,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     await sendNotificationToAdmin(`⚠️ PURCHASE FAILED: NO WALLETS LEFT ⚠️ ${name} (${sessionID}) invId: ${invoiceUUID}`)
     return
   } else {
-    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}), wallets left: ${wallets.length - 1} | invId: ${invoiceUUID}`)
+    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}, owner ${walletInfo.owner || '[not specified]'}), wallets left: ${walletInfo.owner ? wallets.length : wallets.length - 1} | invId: ${invoiceUUID}`)
   }
   let wallet = path.basename(_.sample(wallets) as string).slice(0, -'.keys'.length)
   if (!dryRun) {
@@ -90,26 +90,29 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     })
     console.log(`==[ ${name} ]==: Connecting to wallet via RPC`)
 
-    const mnemonicRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': basicAuth('onsregistry', 'onsregistry')
-      },
-      body: JSON.stringify({ 
-        'jsonrpc': '2.0', 
-        'id': 0, 
-        'method': 'query_key', 
-        'params': { 
-          'key_type': 'mnemonic'
-        } 
+    let mnemonic = ''
+    if(!walletInfo.owner) {
+      const mnemonicRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth('onsregistry', 'onsregistry')
+        },
+        body: JSON.stringify({ 
+          'jsonrpc': '2.0', 
+          'id': 0, 
+          'method': 'query_key', 
+          'params': { 
+            'key_type': 'mnemonic'
+          } 
+        })
       })
-    })
-    const mnemonicResponse = await parseJSONResponse<{ result: { key: string } }>(mnemonicRequest)
-    const mnemonic = mnemonicResponse.result.key
-    if(!mnemonic) {
-      walletCli.kill('SIGINT')
-      throw new Error('No mnemonic in response')
+      const mnemonicResponse = await parseJSONResponse<{ result: { key: string } }>(mnemonicRequest)
+      mnemonic = mnemonicResponse.result.key
+      if(!mnemonic) {
+        walletCli.kill('SIGINT')
+        throw new Error('No mnemonic in response')
+      }
     }
 
     if (!dryRun) {
@@ -165,6 +168,13 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   }
 
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
+  
+  if(walletInfo.owner) {
+    await Promise.all([
+      fs.rename(walletDir + wallet, walletDir + wallet.substring('used_'.length)),
+      fs.rename(walletDir + wallet + '.keys', walletDir + wallet.substring('used_'.length) + '.keys')
+    ])
+  }
 }
 
 async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
