@@ -34,7 +34,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   const walletDir = __dirname + '../../.oxen/'
   const wallets = await glob(walletDir + 'wallet-*.keys')
   if (wallets.length === 0) {
-    return reply.status(500).send({ ok: false, error: 'No wallets left for purchase. Please contact @hlothdev in Telegram' })
+    return reply.status(400).send({ ok: false, error: 'No wallets left for purchase. Please contact @hlothdev in Telegram' })
   }
 
   if (!process.env.YOOKASSA_API_TOKEN) throw new Error('YOOKASSA_API_TOKEN is not set')
