@@ -26,6 +26,8 @@ export type Invoice = {
 
 const rateLimitsCreation = new Map<string, number[]>()
 export async function PurchaseCreateInvoice(request: FastifyRequest, reply: FastifyReply) {
+  return reply.status(400).send({ ok: false, error: 'Service unavailable :(' })
+
   if (!process.env.YOOKASSA_API_TOKEN) throw new Error('YOOKASSA_API_TOKEN is not set')
 
   const body = await z.object({
