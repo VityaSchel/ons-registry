@@ -40,7 +40,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     await sendNotificationToAdmin(`⚠️ PURCHASE FAILED: NO WALLETS LEFT ⚠️ ${name} (${sessionID}) invId: ${invoiceUUID}`)
     return
   } else {
-    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}, owner ${walletInfo.owner || '[not specified]'}), wallets left: ${walletInfo.owner ? wallets.length : wallets.length - 1} | invId: ${invoiceUUID}`)
+    sendNotificationToAdmin(`ONS name purchase: ${name} (${sessionID}, owner ${walletInfo.owner || '[not specified]'}), wallets left: ${wallets.length - 1} | invId: ${invoiceUUID}`)
   }
   let wallet = path.basename(_.sample(wallets) as string).slice(0, -'.keys'.length)
   if (!dryRun) {
@@ -168,10 +168,6 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   }
 
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-  
-  if(walletInfo.owner) {
-    await sendNotificationToAdmin(`Please topup ${wallet} by 8 OXEN and rename it to ${wallet.slice('_used'.length)}`)
-  }
 }
 
 async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
