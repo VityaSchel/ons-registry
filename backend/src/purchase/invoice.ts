@@ -10,6 +10,10 @@ import { sendItem } from './manager.js'
 import { ons } from '../index.js'
 import { hash } from '../encryption.js'
 import { glob } from 'glob'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
 export type Invoice = {
   uuid: string
