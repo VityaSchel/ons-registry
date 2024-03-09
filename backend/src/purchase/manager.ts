@@ -170,10 +170,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
   
   if(walletInfo.owner) {
-    await Promise.all([
-      fs.rename(walletDir + wallet, walletDir + wallet.substring('used_'.length)),
-      fs.rename(walletDir + wallet + '.keys', walletDir + wallet.substring('used_'.length) + '.keys')
-    ])
+    await sendNotificationToAdmin(`Please topup ${wallet} by 8 OXEN and rename it to ${wallet.slice('_used'.length)}`)
   }
 }
 
