@@ -11,3 +11,13 @@ export async function unhash(hash: string, ons?: Db): Promise<string | null> {
     return null
   }
 }
+
+export function blockToTimestamp(block: number): number {
+  const dateOf650kBlock = new Date('2020-10-24T10:42:00.000Z')
+  if (block < 650000) {
+    console.error('blockToTimestamp: block is less than 650000', block)
+    return 0
+  } else {
+    return Math.floor(new Date(dateOf650kBlock.getTime() + (block - 650000) * 120 * 1000).getTime() / 1000)
+  }
+}

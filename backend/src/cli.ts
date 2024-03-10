@@ -5,7 +5,7 @@ import { OnsRecord } from './model.js'
 import { appendOnsRecords } from './db.js'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { unhash } from './utils.js'
+import { blockToTimestamp, unhash } from './utils.js'
 import { decryptONSValue } from './encryption.js'
 import { OnsMapping } from './schema.js'
 import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
@@ -22,9 +22,19 @@ async function migrateOnsDb(pathToOldDb: string) {
     filename: pathToOldDb,
     driver: sqlite3.Database
   })
+
+  const ons = await open({
+    filename: pathToOnsDb,
+    driver: sqlite3.Database
+  })
+
   const rows = await oldOnsDB.all('SELECT * FROM mappings')
   const onsRecords: OnsRecord[] = []
   for (const row of rows) {
+    if (await ons.get('SELECT * FROM mappings WHERE name_hash = ?', row.name_hash)) {
+      continue
+    }
+
     const owner = await oldOnsDB.get('SELECT address FROM owner WHERE id = (?)', row.owner_id) as { address: Buffer }
     let backupOwner: { address: Buffer } | undefined
     if (row.backup_owner_id) {
@@ -39,15 +49,11 @@ async function migrateOnsDb(pathToOldDb: string) {
       transaction_id: row.txid.toString('hex'),
       updated_at_block: row.update_height,
       expires_at_block: row.expiration_height ?? undefined,
-      date: 0,
+      date: blockToTimestamp(row.update_height),
     } satisfies OnsRecord
+    console.log('Adding', onsRecord.name_hash, 'to the list')
     onsRecords.push(onsRecord)
   }
-
-  const ons = await open({
-    filename: pathToOnsDb,
-    driver: sqlite3.Database
-  })
   await appendOnsRecords(ons, onsRecords)
 }
 
