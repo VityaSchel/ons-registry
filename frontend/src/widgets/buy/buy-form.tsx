@@ -71,7 +71,6 @@ export function BuyForm() {
               wallet: 'new',
               coupon: '',
               sessionid: '',
-              email: '',
               owner: ''
             }}
             validationSchema={
@@ -90,9 +89,7 @@ export function BuyForm() {
                   .required(t('errors.sessionid_required')),
                 owner: Yup.string()
                   .length(95, t('errors.owner_invalid'))
-                  .matches(/[a-zA-Z]+/, t('errors.owner_invalid')),
-                email: Yup.string()
-                  .email(t('errors.email_invalid'))
+                  .matches(/[a-zA-Z]+/, t('errors.owner_invalid'))
               })
             }
             onSubmit={async (values) => {
@@ -105,7 +102,6 @@ export function BuyForm() {
                     sessionID: values.sessionid,
                     ...(values.coupon && { coupon: values.coupon }),
                     currency: 'rub',
-                    ...(values.email && { email: values.email }),
                     language: i18n.language === 'ru' ? 'ru' : 'en',
                     ...(values.wallet === 'owned' && { owner: values.owner })
                   })
@@ -205,17 +201,7 @@ export function BuyForm() {
                     </div>
                   </RadioGroup>
                   {values.wallet === 'new' && (
-                    <div className='flex flex-col gap-1 w-full'>
-                      <Input
-                        name="email"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.email}
-                        placeholder={t('fields.email')}
-                      />
-                      <span className='text-neutral-600 text-sm ml-2 mb-1'>{t('fields.email_hint')}</span>
-                      {errors.email && touched.email && <span className='text-red-600 text-sm ml-2 mb-1'>{errors.email}</span>}
-                    </div>
+                    <span className='block text-neutral-600 text-sm ml-2 mb-1'>{t('fields.hint')}</span>
                   )}
                   {values.wallet === 'owned' && (
                     <div className='flex flex-col gap-1 w-full'>

@@ -44,9 +44,6 @@ dependencies:
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
-  nodemailer:
-    specifier: ^6.9.10
-    version: 6.9.10
   sqlite:
     specifier: ^5.1.1
     version: 5.1.1
@@ -79,9 +76,6 @@ devDependencies:
   '@types/node':
     specifier: ^18.17.0
     version: 18.19.10
-  '@types/nodemailer':
-    specifier: ^6.4.14
-    version: 6.4.14
   '@types/sodium-native':
     specifier: ^2.3.9
     version: 2.3.9
@@ -518,12 +512,6 @@ packages:
     resolution: {integrity: sha512-IZD8kAM02AW1HRDTPOlz3npFava678pr8Ie9Vp8uRhBROXAv8MXT2pCnGZZAKYdromsNQLHQcfWQ6EOatVLtqA==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
-
-  /@types/nodemailer@6.4.14:
-    resolution: {integrity: sha512-fUWthHO9k9DSdPCSPRqcu6TWhYyxTBg382vlNIttSe9M7XfsT06y0f24KHXtbnijPGGRIcVvdKHTNikOI6qiHA==}
-    dependencies:
-      '@types/node': 18.19.10
     dev: true
 
   /@types/responselike@1.0.3:
@@ -2283,11 +2271,6 @@ packages:
       - supports-color
     dev: false
     optional: true
-
-  /nodemailer@6.9.10:
-    resolution: {integrity: sha512-qtoKfGFhvIFW5kLfrkw2R6Nm6Ur4LNUMykyqu6n9BRKJuyQrqEGwdXXUAbwWEKt33dlWUGXb7rzmJP/p4+O+CA==}
-    engines: {node: '>=6.0.0'}
-    dev: false
 
   /nopt@5.0.0:
     resolution: {integrity: sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==}

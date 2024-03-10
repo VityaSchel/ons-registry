@@ -13,15 +13,13 @@
     "fetch_failed": "Failed to connect to the server. Please check your internet connection",
     "internal_server_error": "Internal server error",
     "name_occupied": "Unfortunately, this name is already sold",
-    "email_invalid": "Invalid email",
     "owner_invalid": "Invalid OXEN wallet address"
   },
   "fields": {
     "name": "Future username",
     "coupon": "Coupon (optional)",
     "sessionid": "Session ID (66 characters)",
-    "email": "Email (optional)",
-    "email_hint": "If you specify your email, we'll send you a text file with seed phrase for OXEN wallet that owns your record. If you don't know what it is, you can leave this field empty",
+    "hint": "We'll send you a receipt with instructions on how to update your Session nickname after purchase along with seed phrase to access OXEN wallet used for purchase to the specified Session ID.",
     "wallet_type": {
       "new": "I don't have OXEN wallet (recommended)",
       "owned": "I want to connect this ONS to the OXEN wallet"
@@ -64,7 +62,7 @@
     },
     "success": {
       "title": "Congratulations!",
-      "description": "Your name is registered and you can use it. If you want to change the SessionID associated with this name, you will need to download the Oxen app and restore the wallet from the phrase that was sent to you at the email address you specified."
+      "description": "Your name is registered and you can use it. All instructions on how to use and update your nickname were sent to the specified Session ID in Session messenger app. Thank you for your purchase!"
     },
     "errored": {
       "title": "Error while mapping :(",

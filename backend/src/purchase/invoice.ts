@@ -24,7 +24,6 @@ export type Invoice = {
   price: string
   created_at: number
   status: 'created' | 'processing' | 'canceled' | 'success' | 'errored'
-  email?: string
   owner?: string
   language: 'ru' | 'en'
 }
@@ -56,9 +55,6 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     owner: z.string()
       .length(95)
       .regex(/^[a-zA-Z0-9]+$/)
-      .optional(),
-    email: z.string()
-      .email()
       .optional()
   }).safeParseAsync(request.body)
   if (!body.success) {
@@ -92,7 +88,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   }
 
   const invoiceUUID = randomUUID()
-  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, email, language, owner) VALUES (:uuid, :name, :session_id, :coupon, :currency, :price, :created_at, :status, :email, :language, :owner)', {
+  await purchases.run('INSERT INTO invoices (uuid, name, session_id, coupon, currency, price, created_at, status, language, owner) VALUES (:uuid, :name, :session_id, :coupon, :currency, :price, :created_at, :status, :language, :owner)', {
     ':uuid': invoiceUUID,
     ':name': name,
     ':session_id': body.data.sessionID,
@@ -101,7 +97,6 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
     ':price': price[body.data.currency],
     ':created_at': Date.now(),
     ':status': 'created',
-    ':email': body.data.email ?? null, 
     ':language': body.data.language,
     ':owner': body.data.owner,
   })
@@ -116,7 +111,9 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
       ok: true, 
       redirect: redirectUrl
     })
-    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, { email: body.data.email }, true)
+    sendItem(invoiceUUID, name, body.data.sessionID, body.data.language, {
+      owner: body.data.owner,
+    }, true)
     return 
   }
 
