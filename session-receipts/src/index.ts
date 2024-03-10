@@ -1,4 +1,3 @@
-import './env.js'
 import Fastify from 'fastify'
 import { createIdentity, getSessionID, initializeSession, sendMessage } from 'session-messenger-nodejs'
 import { dirname } from 'path'
