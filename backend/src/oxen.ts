@@ -30,7 +30,9 @@ export async function sync() {
     body: JSON.stringify({ jsonrpc: '2.0', id: '0', method: 'get_block_count', params: {} })
   })
     .then(req => req.json()) as { result: { count: number } }
-  const latestBlock = blocks.result.count - 1
+  // Setting 10+2 because we must ensure we're not scanning incomplete blocks that still
+  // may have incomplete transactions and unconfirmed ONS names
+  const latestBlock = blocks.result.count - 12
   const currentBlock = config.currentBlock
   if(currentBlock !== latestBlock) {
     console.log(`Syncing from block ${currentBlock} to ${latestBlock}`)
