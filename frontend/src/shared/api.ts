@@ -17,7 +17,7 @@ async function awaitCacheInitialization() {
 }
 
 type FetchListResponse = { ok: true, mappings: OnsRecord[], total: number } | { ok: false, error: string }
-export async function fetchList(options: { query?: string, offset?: number, limit?: number, owner?: string, type?: string, sort_by?: string, sort_dir?: string }, fetchOptions?: { signal: AbortSignal }) {
+export async function fetchList(options: { query?: string, offset?: number, limit?: number, owner?: string, type?: string, sort_by?: string, sort_dir?: 'DESC' | 'ASC' }, fetchOptions?: { signal: AbortSignal }) {
   await awaitCacheInitialization()
   const state = store.getState().searchStorage
   if (state.searchStorageType === 'local' && state.searchStorageData) {
@@ -34,13 +34,17 @@ export async function fetchList(options: { query?: string, offset?: number, limi
       }
     }
     if (options.sort_by) {
-      mappings.sort((a, b) => {
-        if (options.sort_dir === 'asc') {
-          // @ts-expect-error ...
-          return a[options.sort_by] > b[options.sort_by] ? 1 : -1
+      mappings = [...mappings].sort((a, b) => {
+        let sortBy: keyof OnsRecord
+        if (options.sort_by === 'blockCreatedAt') {
+          sortBy = 'blockCreatedAt'
         } else {
-          // @ts-expect-error ...
-          return a[options.sort_by] < b[options.sort_by] ? 1 : -1
+          return 0
+        }
+        if (options.sort_dir === 'ASC') {
+          return a[sortBy] > b[sortBy] ? 1 : -1
+        } else {
+          return a[sortBy] < b[sortBy] ? 1 : -1
         }
       })
     }

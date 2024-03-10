@@ -34,10 +34,11 @@ import { RowDetails } from '@/entities/row-details'
 import { Tooltip } from '@/shared/ui/tooltip'
 import { OnsRecordOwner } from '@/entities/ons-record-owner'
 
-export function ONSRecordsTable({ data, loading = false, exactResults, onSortChange }: {
+export function ONSRecordsTable({ data, loading = false, exactResults, sorting, onSortChange }: {
   data: OnsRecord[] | null
   loading?: boolean
   exactResults?: OnsRecord[] | null
+  sorting: SortingState
   onSortChange: (sorting: SortingState) => void
 }) {
   const { t, i18n } = useTranslation('common')
@@ -180,7 +181,6 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       size: 100,
     }
   ], [language, t, ownerDisplay])
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
   const tableRows = React.useMemo(() => {
     return exactResults ? [
       ...exactResults ?? [], 
@@ -197,8 +197,6 @@ export function ONSRecordsTable({ data, loading = false, exactResults, onSortCha
       } else {
         onSortChange(sort)
       }
-
-      setSorting(sort)
     },
     manualSorting: true,
     state: {

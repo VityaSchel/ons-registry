@@ -26,6 +26,7 @@ export function Search() {
   const [recentOnsTotal, setRecentOnsTotal] = React.useState<null | number>(null)
   const [displaying, setDisplaying] = React.useState<{ from: number, to: number } | null>()
   const [recentOnsLoaded, setRecentOnsLoaded] = React.useState<{ from: number, to: number } | null>()
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'updatedAtBlock', desc: true }])
 
   const isValidONSName = React.useMemo(() => {
     return new RegExp('^\\w([\\w-]*[\\w])?$', 'g')
@@ -53,7 +54,7 @@ export function Search() {
         setSearchResults(null)
         setExactResults(null)
         if (searchQuery) {
-          const searchResults = search(searchQuery, mode)
+          const searchResults = search(searchQuery, mode, sorting)
           searchResults.promise
             .then(({ mappings, total }) => {
               setSearchResults(mappings)
@@ -162,11 +163,11 @@ export function Search() {
     setTotal(results.total)
   }
 
-  const handleSortRecent = async (sort: SortingState) => {
-    setRecentOns(null)
+  const handleSortRecent = async (sort: SortingState, currentView: boolean) => {
+    currentView && setRecentOns(null)
     const records = await getRecentOns(sort)
     setRecentOns(records.mappings)
-    setTotal(records.total)
+    currentView && setTotal(records.total)
     setRecentOnsTotal(records.total)
   }
 
@@ -212,7 +213,8 @@ export function Search() {
 
   const handleLoad = async (offset: number) => {
     const result = await fetchList({
-      ...(searchQuery && { query: searchQuery }),
+      ...(mode === 'names' && searchQuery && { query: searchQuery }),
+      ...(mode === 'by_author' && { owner: searchQuery }),
       limit: 100, 
       offset: offset,
       type: 'session'
@@ -322,19 +324,31 @@ export function Search() {
             data={showRecent ? recentOns : searchResults}
             exactResults={showRecent ? [] : exactResults}
             loading={showRecent ? recentOns === null : (searchResults === null && exactResults === null)}
-            onSortChange={showRecent ? handleSortRecent : handleSortResults}
+            onSortChange={sort => {
+              setSorting(sort)
+              handleSortRecent(sort, showRecent)
+              if(!showRecent) {
+                handleSortResults(sort)
+              }
+            }}
+            sorting={sorting}
           />
           <div className='flex flex-col gap-2 items-center'>
             {Boolean(hasMore) && <Button variant='outline' onClick={handleLoadMore}>
               {t('pagination.load_more')}
             </Button>}
           </div>
-          <div className='flex gap-2 items-center justify-between w-full flex-col sm:flex-row'>
+          <div className='flex gap-4 items-center justify-between w-full flex-col sm:flex-row'>
             {(total && !loading) ? (
-              <span className='text-sm font-normal'>{t('pagination.showing')
-                .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
-                .replace('{total}', String(total))
-              }</span>
+              <div className='flex flex-col gap-1 text-center sm:text-left'>
+                <span className='text-sm font-normal'>{t('pagination.showing')
+                  .replace('{showing}', showRecent ? String(recentOns?.length) : String(searchResults?.length))
+                  .replace('{total}', String(total))
+                }</span>
+                <span className='text-xs font-normal text-neutral-500 mx-4 sm:mx-0'>
+                  {t('pagination.note')}
+                </span>
+              </div>
             ) : <span />}
             {Boolean(total) && total && (
               <TablePagination

@@ -9,4 +9,5 @@ export type OnsRecord = {
   sessionId: string | null;
   nameHash?: string | undefined;
   name: string | null;
+  blockCreatedAt: string
 }

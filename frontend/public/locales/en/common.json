@@ -47,6 +47,7 @@
   },
   "pagination": {
     "showing": "Showing {showing} of {total} results",
+    "note": "We only show names that have been confirmed by the network (after 12 blocks or 24 minutes after purchase)",
     "load_more": "Load more"
   },
   "statistics": {
