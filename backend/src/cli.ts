@@ -11,7 +11,7 @@ import { OnsMapping } from './schema.js'
 import { generateOwners, keypairToOxen, oxenToKeypair } from './monero-base58.js'
 import fs from 'fs/promises'
 import { collectPrices, getMoneySpent } from './price.js'
-import { sendEmail } from './email.js'
+import { sendReceiptToSession } from './session-receipts.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 const pathToOnsDb = __dirname + '../db/ons.db'
@@ -313,16 +313,19 @@ switch(process.argv[2]) {
     }
     console.log('Money spent:', await getMoneySpent(process.argv[3], process.argv[4]))
     break
-  case 'send_test_email':
-    console.log('Sending to', [{ email: process.argv[3] }])
-    await sendEmail({
-      from: { email: 'confirmation@purchases.ons.sessionbots.directory', name: 'ONS Registry' },
-      to: [{ email: process.argv[3] }],
-      subject: 'Test email',
-      text: 'This is test email',
+  case 'send_test_receipt':
+    if(process.argv[3] === undefined || process.argv[4] === undefined || process.argv[5] === undefined || process.argv[6] === undefined) {
+      console.error('Usage: node out/cli.js send_test_receipt <SessionID> <name> <ru | en> <txHash> <seedPhrase or ownerOxen>')
+      process.exit(1)
+    }
+    await sendReceiptToSession(process.argv[3], {
+      name: process.argv[4],
+      language: process.argv[5] as 'ru' | 'en',
+      txHash: process.argv[6],
+      ...(process.argv[7].includes(' ') ? { seedPhrase: process.argv[7] } : { ownerOxen: process.argv[7] })
     })
     break
   default:
-    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n | node out/cli.js add_blocks_dates <path_to_blocks_mappings.db>')
+    console.error('Usage: node out/cli.js migrate <path_to_ons.db>\n | node out/cli.js add_cleartext\n | node out/cli.js decrypt_value <value> <name>\n | node out/cli.js add_wallets_and_keypairs\n | node out/cli.js check_wallets_and_keypairs\n | node out/cli.js fix_backup_owner <path_to_ons.db> \n | node out/cli.js fix_encrypted_values\n | node out/cli.js fix_switched_values\n | node out/cli.js add_blocks_dates <path_to_blocks_mappings.db> \n | node out/cli.js collect_prices <rub | usd> [starting from unix timestamp] \n | node out/cli.js get_money_spent <rub | usd> <owner> \n | node out/cli.js send_test_receipt <SessionID> <name> <ru | en> <txHash> <seedPhrase or ownerOxen>')
     process.exit(1)
 }

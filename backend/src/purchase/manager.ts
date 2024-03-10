@@ -8,7 +8,7 @@ import _ from 'lodash'
 import tcpPortUsed from 'tcp-port-used'
 import path from 'path'
 import basicAuth from 'basic-authorization-header'
-import { sendEmail } from '../email.js'
+import { sendReceiptToSession } from '../session-receipts.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
@@ -28,7 +28,7 @@ async function sendNotificationToAdmin(text: string) {
   })
 }
 
-export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', walletInfo: { email?: string, owner?: string }, dryRun = false) {
+export async function sendItem(invoiceUUID: string, name: string, sessionID: string, language: 'ru' | 'en', walletInfo: { owner?: string }, dryRun = false) {
   await purchases.run('UPDATE invoices SET status = "processing" WHERE uuid = ?', invoiceUUID)  
 
   const walletDir = __dirname + '../../.oxen/'
@@ -115,6 +115,8 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
       }
     }
 
+    type BuyResponse = { error: { code: number, message: string } } | { result: { tx_hash: string } }
+    let buyResponse: BuyResponse | undefined = undefined
     if (!dryRun) {
       const buyRequest = await fetch(`http://127.0.0.1:${walletPort}/json_rpc`, {
         method: 'POST',
@@ -136,7 +138,7 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
           } 
         })
       })
-      const buyResponse = await parseJSONResponse<{ error: { code: number, message: string } } | { result: object }>(buyRequest)
+      buyResponse = await parseJSONResponse<BuyResponse>(buyRequest)
       if ('error' in buyResponse) {
         console.error(`==[ ${name} ]==: Error while buying item:`, buyResponse.error.message)
         await purchases.run('UPDATE invoices SET status = "errored" WHERE uuid = ?', invoiceUUID)
@@ -149,15 +151,22 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
     }
     
     await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-    if (walletInfo.email) {
-      if(!walletInfo.owner) {
-        console.log(`==[ ${name} ]==: Sending email to ${walletInfo.email} with seed phrase ${language}`)
-        sendEmailWithSeedPhrase(walletInfo.email, mnemonic, language)
-      } else {
-        console.log(`==[ ${name} ]==: User specified email, but also specified owner, so not sending seed phrase`)
-      }
+    if(!walletInfo.owner) {
+      console.log(`==[ ${name} ]==: Sending receipt + seed pharse to ${sessionID} on ${language} language`)
     } else {
-      console.log(`==[ ${name} ]==: User did not specify email, so keeping seed phrase safe`)
+      console.log(`==[ ${name} ]==: Sending only receipt to ${sessionID} on ${language} language`)
+    }
+    if (buyResponse) {
+      sendReceiptToSession(sessionID, { 
+        ...(walletInfo.owner ? { 
+          ownerOxen: walletInfo.owner as string
+        } : {
+          seedPhrase: mnemonic as string 
+        }),
+        language,
+        name,
+        txHash: buyResponse.result.tx_hash
+      })
     }
     setTimeout(() => walletCli.kill('SIGINT'), 1000 * 30)
   } catch(e) {
@@ -168,33 +177,6 @@ export async function sendItem(invoiceUUID: string, name: string, sessionID: str
   }
 
   await purchases.run('UPDATE invoices SET status = "success" WHERE uuid = ?', invoiceUUID)
-}
-
-async function sendEmailWithSeedPhrase(email: string, seedPhrase: string, language: 'ru' | 'en') {
-  const sender = {
-    email: 'confirmation@purchases.ons.sessionbots.directory',
-    name: 'ONS Registry',
-  }
-
-  try {
-    if (language === 'ru') {
-      await sendEmail({
-        from: sender,
-        to: [{ email }],
-        subject: 'Спасибо за покупку ONS имени в Session',
-        text: 'Поздравляем с покупкой имени! Ваше имя уже активно и вас уже можно найти по нему в Session (если вы еще не можете перейти по нему, подождите до 10 минут для регистрации в блокчейне). Если вы захотите управлять своим именем (например, привязать это имя к другому SessionID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту фразу: ' + seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне. Пожалуйста, имейте в виду, что мы никак не связаны с OXEN, Session и не можем управлять блокчейном, а также помочь с вопросами, связанными с этим. Наш сайт не поддерживает управление вашим именем после покупки.\n\nСпасибо за покупку и ждем вас снова!'
-      })
-    } else {
-      await sendEmail({
-        from: sender,
-        to: [{ email }],
-        subject: 'Thank you for purchasing ONS name in Session',
-        text: 'Congratulations on your purchase! Your name is already active and you can already be found by it in Session (if you still cannot go to it, wait up to 10 minutes for registration in the blockchain). If you want to manage your name (for example, bind this name to another SessionID), you will need to install the official OXEN Wallet app and enter this phrase there: ' + seedPhrase + '. DO NOT SHOW THIS PHRASE TO ANYONE - it gives access to the name you bought in the blockchain. Please note that we are not affiliated with OXEN, Session and cannot control the blockchain, as well as help with issues related to this. Our site does not support managing your name after purchase.\n\nThank you for your purchase!'
-      })
-    }
-  } catch (e) {
-    console.error('Failed to send email', e)
-  }
 }
 
 const parseJSONResponse = async <T>(response: Response): Promise<T> => {
