@@ -38,9 +38,9 @@ export async function sync() {
     console.log(`Syncing from block ${currentBlock} to ${latestBlock}`)
 
     const totalNumber = latestBlock - currentBlock
-    const batchSize = 2500
+    const batchSize = 500
     const blocks: BlockHeader[] = []
-    for (let i = 1; i <= totalNumber; i += batchSize) {
+    for (let i = 0; i < totalNumber; i += batchSize) {
       const blocksChunk = await fetch('http://public-eu.optf.ngo:22023/json_rpc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,7 +140,7 @@ export async function sync() {
       }
     }
 
-    await fs.writeFile(__dirname + '../db/config.json', JSON.stringify({ currentBlock: latestBlock + 1 }), 'utf-8')
+    await fs.writeFile(__dirname + '../db/config.json', JSON.stringify({ currentBlock: latestBlock }), 'utf-8')
   } else {
     console.log('Up to date!')
   }
