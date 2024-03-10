@@ -272,7 +272,7 @@ fastify.listen({ port: 6801 }, (err, address) => {
 
 async function scheduleAutosync() {
   await sync()
-  await new Promise(resolve => setTimeout(resolve, 1000 * 2))
+  await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 1))
   scheduleAutosync()
 }
 
