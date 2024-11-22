@@ -8,9 +8,9 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
   console.log('Appending', onsRecord.length, 'ONS records: ', onsRecord.map(record => record.name_hash))
   for (const record of onsRecord) {
     if (record.payment_id) {
-      const exists = await checkIfExists(ons, record.name_hash, record.payment_id)
+      const exists = await checkIfExists(ons, record.name_hash, record.transaction_id)
       if (exists) {
-        console.log('Skipping', record.name_hash, 'because it is duplicate with payment_id', record.payment_id)
+        console.log('Skipping', record.name_hash, 'because it is duplicate with transaction_id', record.transaction_id)
         continue
       }
     }
@@ -56,10 +56,10 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
   console.log('Finished adding', onsRecord.length, 'ONS records')
 }
 
-async function checkIfExists(ons: Db, nameHash: string, paymentId: string) {
-  return await ons.get('SELECT * FROM mappings WHERE name_hash = ? AND payment_id = ? AND payment_id IS NOT NULL', [
+async function checkIfExists(ons: Db, nameHash: string, transactionId: string) {
+  return await ons.get('SELECT * FROM mappings WHERE name_hash = ? AND transactionId = ? AND payment_id IS NOT NULL', [
     nameHash,
-    paymentId
+    transactionId
   ])
 }
 
