@@ -83,7 +83,7 @@
     },
     "hints": {
       "local": "ONS records database was downloaded to your device and all searches are performed locally. Database updates automatically. You can open this website and search without internet connection. Last update: {lastUpdate}",
-      "remotely": "Performing searches remotely because you have poor internet connection. Connect to Wi-Fi and database will be automatically downloaded and constantly updated. Search locally without having to be connected to internet."
+      "remotely": "Search queries are remote because you have poor internet connection or unsupported browser (Firefox, Safari, etc). Connect to Wi-Fi and database will be automatically downloaded and constantly updated. You'll be able to search locally with <0.01 sec delay."
     }
   },
   "unknown": "Unknown"
