@@ -5,7 +5,7 @@ import { OnsMapping } from './schema.js'
 import { unhash } from './utils.js'
 
 export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
-  console.log('Appending', onsRecord.length, 'ONS records')
+  console.log('Appending', onsRecord.length, 'ONS records: ', onsRecord.map(record => record.name_hash))
   for (const record of onsRecord) {
     if (record.payment_id) {
       const exists = await checkIfExists(ons, record.name_hash, record.payment_id)

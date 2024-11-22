@@ -98,6 +98,7 @@ fastify.get<{ Params: { name: string } }>('/session/:name', async (request, repl
               updatedAtBlock: mapping.updated_at_block,
               expiresAtBlock: mapping.expires_at_block,
               action: mapping.action,
+              blockCreatedAt: mapping.block_created_at
             }
           }))
     })
