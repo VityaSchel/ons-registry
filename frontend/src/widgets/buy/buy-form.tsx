@@ -65,7 +65,11 @@ export function BuyForm() {
           </Link>
           <h1 className='scroll-m-20 text-3xl font-extrabold tracking-tight md:text-5xl text-left'>{t('heading')}</h1>
           <p className='text-left font text-base md:text-md'>{t('description')}</p>
-          <Formik
+          <div className='flex flex-col gap-2 font-normal text-white/50'>
+            <p>{t('unavailable')}</p>
+            <Link href='https://sogs.hloth.dev/ons-registry?public_key=8948f2d9046a40e7dbc0a4fd7c29d8a4fe97df1fa69e64f0ab6fc317afb9c945' className='break-all underline'>https://sogs.hloth.dev/ons-registry?public_key=8948f2d9046a40e7dbc0a4fd7c29d8a4fe97df1fa69e64f0ab6fc317afb9c945</Link>
+          </div>
+          {/* <Formik
             initialValues={{
               name: nameString,
               wallet: 'new',
@@ -136,7 +140,6 @@ export function BuyForm() {
               handleSubmit,
               isSubmitting,
               setFieldValue
-              /* and other goodies */
             }) => {
               const handleCheckCoupon = async (coupon: string) => {
                 setCouponNotFound(false)
@@ -243,7 +246,7 @@ export function BuyForm() {
                 </form>
               )
             }}
-          </Formik>
+          </Formik> */}
         </div>
         <div className='flex flex-col gap-2 flex-1 mt-12'>
           <div className='flex mb-2'>

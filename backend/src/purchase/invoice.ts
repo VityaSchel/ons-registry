@@ -30,6 +30,8 @@ export type Invoice = {
 
 const rateLimitsCreation = new Map<string, number[]>()
 export async function PurchaseCreateInvoice(request: FastifyRequest, reply: FastifyReply) {
+  return reply.status(503).send({ ok: false, error: 'PURCHASES_DISABLED' })
+
   const walletDir = __dirname + '../../.oxen/'
   const wallets = await glob(walletDir + 'wallet-*.keys')
   if (wallets.length === 0) {

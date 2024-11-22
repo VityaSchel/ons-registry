@@ -2,6 +2,7 @@
   "title": "Купить имя в Session — ONS Registry",
   "description": "На этой странице вы можете приобрести никнейм в Session (ONS) за рубли или криптовалюту.",
   "heading": "Приобрести имя в Session",
+  "unavailable": "Сервис временно недоступен. Следите за обновлениями в Session:",
   "errors": {
     "coupon_invalid": "Некорретный купон",
     "name_too_long": "Имя не может быть длиннее 64 символов",
