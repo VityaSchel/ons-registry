@@ -57,7 +57,7 @@ export async function appendOnsRecords(ons: Db, onsRecord: OnsRecord[]) {
 }
 
 async function checkIfExists(ons: Db, nameHash: string, transactionId: string) {
-  return await ons.get('SELECT * FROM mappings WHERE name_hash = ? AND transactionId = ? AND payment_id IS NOT NULL', [
+  return await ons.get('SELECT * FROM mappings WHERE name_hash = ? AND transaction_id = ? AND transaction_id IS NOT NULL', [
     nameHash,
     transactionId
   ])
