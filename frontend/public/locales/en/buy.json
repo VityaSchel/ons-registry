@@ -2,6 +2,7 @@
   "title": "Buy Session username — ONS Registry",
   "description": "On this page you can buy a nickname in Session (ONS) for rubles or cryptocurrency.",
   "heading": "Buy Session username",
+  "unavailable": "Service is temporarily unavailable. Follow updates in Session:",
   "errors": {
     "coupon_invalid": "Invalid coupon",
     "name_too_long": "Name cannot be longer than 64 characters",
