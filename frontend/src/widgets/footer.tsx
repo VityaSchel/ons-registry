@@ -33,12 +33,12 @@ export function Footer() {
         <div className='flex flex-col gap-5'>
           <h2 className='smwht:h-16 lg:h-auto text-2xl 900:text-3xl font-bold'>{t('links')}</h2>
           <Link href='https://sessionbots.directory/' className={linkClasses} target='_blank' rel='noreferrer'>sessionbots.directory</Link>
-          <Link href='https://t.me/session_nodejs' className={linkClasses + ' hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2'} target='_blank' rel='noreferrer'>
-            <TeleramLogo height={20} /> {t('telegram')}
+          <Link href='https://sogs.hloth.dev/ons-registry?public_key=8948f2d9046a40e7dbc0a4fd7c29d8a4fe97df1fa69e64f0ab6fc317afb9c945' className={linkClasses + ' hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2'} target='_blank' rel='noreferrer'>
+            {t('session_channel')}
           </Link>
         </div>
         <div className='ml-auto flex items-end w-48 shrink-0 flex-col justify-between gap-4'>
-          <Link className={linkClasses} href='https://t.me/session_nodejs/73' target='_blank' rel='nofollow noreferrer'>API Docs</Link>
+          <Link className={linkClasses} href='https://gist.github.com/VityaSchel/72210ebeb247816d09261b5194159cc6' target='_blank' rel='nofollow noreferrer'>API Docs</Link>
           <span className='text-muted text-right'>{t('made_by')} <Link href='https://github.com/vityaschel' className='font-semibold hover:text-indigo-600 transition-colors duration-200'>{t('author')}</Link></span>
         </div>
       </div>
