@@ -130,6 +130,7 @@ fastify.get('/list', async (request, reply) => {
       .optional(),
     sort_by: z.enum([
       'updatedAtBlock',
+      'blockCreatedAt'
     ]).optional(),
     sort_dir: z.enum([
       'ASC',
@@ -150,6 +151,7 @@ fastify.get('/list', async (request, reply) => {
   }
   const sortBy = {
     updatedAtBlock: 'mappings.updated_at_block',
+    blockCreatedAt: 'mappings.updated_at_block',
   }[query.data.sort_by ?? 'updatedAtBlock']
   const sortDir = query.data.sort_dir ?? 'DESC'
   const types = query.data.type
