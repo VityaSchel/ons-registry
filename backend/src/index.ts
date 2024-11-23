@@ -136,6 +136,8 @@ fastify.get('/list', async (request, reply) => {
       'ASC',
       'DESC',
     ]).optional(),
+    value: z.string()
+      .optional(),
     owner: z.string()
       .min(1)
       .max(160)
@@ -163,6 +165,7 @@ fastify.get('/list', async (request, reply) => {
     ${query.data.query ? 'AND hashes.string LIKE :query' : ''}
     ${query.data.min_block ? 'AND mappings.updated_at_block >= :minBlock' : ''}
     ${query.data.max_block ? 'AND mappings.updated_at_block <= :maxBlock' : ''}
+    ${query.data.value ? 'AND decrypted_value = :queryValue' : ''}
     ${query.data.owner 
     ? query.data.owner.length === 160
       ? 'AND (mappings.owner = :owner OR mappings.backup_owner = :owner)'
@@ -173,6 +176,7 @@ fastify.get('/list', async (request, reply) => {
     ...(query.data.query && { ':query': `%${query.data.query}%` }),
     ...(query.data.min_block && { ':minBlock': query.data.min_block }),
     ...(query.data.max_block && { ':maxBlock': query.data.max_block }),
+    ...(query.data.value && { ':queryValue': query.data.value }),
     ...(query.data.owner && { ':owner': query.data.owner }),
   }
   const mappings = await ons.all<OnsMapping[]>(`
@@ -262,11 +266,39 @@ fastify.get('/cost', async (request, reply) => {
   reply.send({ ok: true, amount })
 })
 
+fastify.get<{ Params: { sessionid: string } }>('/sessionid/:sessionid', async (request, reply) => {
+  const sessionID = request.params.sessionid.toLowerCase()
+  if (!/^05[a-f0-9]{64}$/.test(sessionID)) {
+    reply.status(400).send({ ok: false, error: 'INVALID_SESSION_ID' })
+    return
+  }
+  const names = await ons.all<{ unhashed_name: string }[]>(`
+    SELECT unhashed_name
+    FROM mappings
+    WHERE unhashed_name IS NOT NULL AND decrypted_value = ?
+    ORDER BY updated_at_block DESC;
+  `, [sessionID])
+  reply.send({ ok: true, names: names.map(row => row.unhashed_name) })
+})
+
+fastify.get('/share', async (_, reply) => {
+  const shares = await ons.all<{ owner_oxen: string, 'COUNT(*)': number }[]>(`
+    SELECT owner_oxen, COUNT(*) AS row_count
+    FROM mappings
+    GROUP BY owner_oxen
+    ORDER BY row_count DESC;
+  `)
+  if (!shares) {
+    reply.status(404).send({ ok: false, error: 'NOT_FOUND' })
+    return
+  }
+  reply.send({ ok: true, shares: shares.map(row => [row.owner_oxen, row['COUNT(*)']]) })
+})
+
 fastify.get('/purchase/promo/:name', PurchasePromoGet)
 fastify.post('/purchase/invoice', PurchaseCreateInvoice)
 fastify.post('/purchase/callback', PurchaseCallback)
 fastify.get('/purchase/status', PurchaseStatus)
-fastify.get('/ip8721379812783', (request, reply) => reply.send(request.ip))
 
 fastify.listen({ port: 6801 }, (err, address) => {
   if (err) throw err
