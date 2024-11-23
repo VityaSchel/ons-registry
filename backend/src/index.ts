@@ -278,7 +278,7 @@ fastify.get<{ Params: { sessionid: string } }>('/sessionid/:sessionid', async (r
     WHERE unhashed_name IS NOT NULL AND decrypted_value = ?
     ORDER BY updated_at_block DESC;
   `, [sessionID])
-  reply.send({ ok: true, names: names.map(row => row.unhashed_name) })
+  reply.send({ ok: true, names: Array.from(new Set(names.map(row => row.unhashed_name))) })
 })
 
 fastify.get('/share', async (_, reply) => {
