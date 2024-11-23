@@ -282,7 +282,7 @@ fastify.get<{ Params: { sessionid: string } }>('/sessionid/:sessionid', async (r
 })
 
 fastify.get('/share', async (_, reply) => {
-  const shares = await ons.all<{ owner_oxen: string, 'COUNT(*)': number }[]>(`
+  const shares = await ons.all<{ owner_oxen: string, row_count: number }[]>(`
     SELECT owner_oxen, COUNT(*) AS row_count
     FROM mappings
     GROUP BY owner_oxen
@@ -292,7 +292,7 @@ fastify.get('/share', async (_, reply) => {
     reply.status(404).send({ ok: false, error: 'NOT_FOUND' })
     return
   }
-  reply.send({ ok: true, shares: shares.map(row => [row.owner_oxen, row['COUNT(*)']]) })
+  reply.send({ ok: true, shares: shares.map(row => [row.owner_oxen, row.row_count]) })
 })
 
 fastify.get('/purchase/promo/:name', PurchasePromoGet)
