@@ -105,7 +105,7 @@ export async function PurchaseCreateInvoice(request: FastifyRequest, reply: Fast
   const redirectUrl = `${
     process.env.YOOKASSA_API_TOKEN.startsWith('test')
       ? 'http://localhost:6802'
-      : 'https://ons.sessionbots.directory'
+      : 'https://' + publicHost
   }/${body.data.language === 'ru' ? 'ru/' : ''}purchase-processing?invoice=${invoiceUUID}`
 
   if(new Decimal(price[body.data.currency]).eq(0)) {

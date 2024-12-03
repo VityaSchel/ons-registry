@@ -13,7 +13,7 @@ try {
   await getSessionID()
 } catch(e) {
   if (e.message === 'User is not authorized') {
-    await createIdentity('ons.sessionbots.directory (do not reply)')
+    await createIdentity('ons.session.community (do not reply)')
   } else {
     throw e
   }

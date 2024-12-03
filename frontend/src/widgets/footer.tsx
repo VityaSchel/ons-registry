@@ -32,7 +32,7 @@ export function Footer() {
         </div>
         <div className='flex flex-col gap-5'>
           <h2 className='smwht:h-16 lg:h-auto text-2xl 900:text-3xl font-bold'>{t('links')}</h2>
-          <Link href='https://sessionbots.directory/' className={linkClasses} target='_blank' rel='noreferrer'>sessionbots.directory</Link>
+          <Link href='https://bots.session.community/' className={linkClasses} target='_blank' rel='noreferrer'>bots.session.community</Link>
           <Link href='https://sogs.hloth.dev/ons-registry?public_key=8948f2d9046a40e7dbc0a4fd7c29d8a4fe97df1fa69e64f0ab6fc317afb9c945' className={linkClasses + ' hover:text-indigo-600 transition-colors duration-200 font-semibold w-fit text-base 900:text-lg flex items-center gap-2'} target='_blank' rel='noreferrer'>
             {t('session_channel')}
           </Link>

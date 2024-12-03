@@ -1,10 +1,13 @@
+const publicHost = process.env.PUBLIC_HOST
+if (!publicHost) throw new Error('Please add PUBLIC_HOST to .env')
+
 export async function sendReceiptToSession(sessionID: string, content: {
   name: string, language: 'ru' | 'en', txHash: string
 } & ({ seedPhrase: string } | { ownerOxen: string })) {
   try {
     let text
     if (content.language === 'ru') {
-      text = content.name + `, поздравляем с покупкой имени на https://ons.sessionbots.directory/ru/buy 🎉 Ваше имя уже активно и вас уже можно найти по нему в Session. Запись о покупке в блокчейне: https://oxen.observer/tx/${content.txHash} Если вы еще не можете перейти по вашему имени, подождите до 20 минут для подтверждения блокчейном.`
+      text = content.name + `, поздравляем с покупкой имени на https://${publicHost}/ru/buy 🎉 Ваше имя уже активно и вас уже можно найти по нему в Session. Запись о покупке в блокчейне: https://oxen.observer/tx/${content.txHash} Если вы еще не можете перейти по вашему имени, подождите до 20 минут для подтверждения блокчейном.`
 
       if ('seedPhrase' in content) {
         text += '\n\nЕсли вы захотите управлять своим именем (например, привязать это имя к другому Session ID), вам потребуется установить официальное приложение OXEN Wallet и ввести туда эту мнемоническую фразу для доступа к кошельку, с которого был куплен маппинг: ' + content.seedPhrase + '. НИКОМУ НЕ ПОКАЗЫВАЙТЕ ЭТУ ФРАЗУ — она дает доступ к купленному вами имени в блокечейне и с помощью неё можно перепривязать никнейм к другому аккаунту.'
@@ -19,7 +22,7 @@ export async function sendReceiptToSession(sessionID: string, content: {
 
       text += '\n\nСпасибо за покупку и ждем вас снова!'
     } else {
-      text = content.name + `, congratulations on your purchase at https://ons.sessionbots.directory/buy 🎉! Your name is already active and you can already be found by it in Session. Here is the blockchain purchase record: https://oxen.observer/tx/${content.txHash} If you still can't go to your nickname, please allow up to 20 minutes for confirmation by the OXEN blockchain.`
+      text = content.name + `, congratulations on your purchase at https://${publicHost}/buy 🎉! Your name is already active and you can already be found by it in Session. Here is the blockchain purchase record: https://oxen.observer/tx/${content.txHash} If you still can't go to your nickname, please allow up to 20 minutes for confirmation by the OXEN blockchain.`
 
       if ('seedPhrase' in content) {
         text = '\n\nIf you want to manage your name (for example, bind this name to another Session ID), you will need to install the official OXEN Wallet app and enter this see phrase (mnemonic) there: ' + content.seedPhrase + '. DO NOT SHARE THIS PHRASE WITH ANYONE - it gives access to the name you just bought. '

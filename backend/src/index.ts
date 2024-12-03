@@ -19,6 +19,9 @@ import { getMoneySpent } from './price.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + '/'
 
+const publicHost = process.env.PUBLIC_HOST
+if (!publicHost) throw new Error('Please add PUBLIC_HOST to .env')
+
 const fastify = Fastify({
   logger: true,
   trustProxy: true
@@ -27,7 +30,7 @@ const fastify = Fastify({
 await fastify.register(cors, {
   origin: (origin, cb) => {
     if (!origin) {
-      cb(null, 'ons.sessionbots.directory')
+      cb(null, publicHost)
       return 
     }
     
@@ -37,12 +40,12 @@ await fastify.register(cors, {
       return
     }
 
-    if (hostname === 'ons.sessionbots.directory') {
+    if (hostname === publicHost) {
       cb(null, true)
       return
     }
 
-    cb(null, 'ons.sessionbots.directory')
+    cb(null, publicHost)
   }
 })
 
